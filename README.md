@@ -1,1 +1,1 @@
-# Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques
+# Diabetes Prediction using ML and XAI
