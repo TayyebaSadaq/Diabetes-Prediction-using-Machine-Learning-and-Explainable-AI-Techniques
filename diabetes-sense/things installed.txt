@@ -8,3 +8,4 @@ npm install react-native-geojson
 
 pip install flask requests
 
+npm install react-native-maps
