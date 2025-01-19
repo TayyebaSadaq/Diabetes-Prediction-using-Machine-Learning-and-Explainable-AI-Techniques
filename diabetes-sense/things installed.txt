@@ -1,0 +1,11 @@
+pip install folium - python api to get data from WHO 
+
+npm install react-native-chart-kit react-native-svg - to display the chart for diabetes prevalence 
+
+npm install react-native-maps react-native-svg
+
+npm install react-native-geojson
+
+pip install flask requests
+
+npm install react-native-maps
