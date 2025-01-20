@@ -11,3 +11,5 @@ pip install flask requests
 npm install react-native-maps
 
 pip install seaborn
+
+pip install scikit-learn
