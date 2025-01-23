@@ -1,135 +1,147 @@
 import React, { useState } from 'react';
-import { Image, StyleSheet, TextInput, Button, Alert, View, Text } from 'react-native';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
+import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import axios from 'axios';
 
-// Define InputData interface
-interface InputData {
-  Pregnancies: string;
-  Glucose: string;
-  BloodPressure: string;
-  SkinThickness: string;
-  Insulin: string;
-  BMI: string;
-  DiabetesPedigreeFunction: string;
-  Age: string;
+// Define an interface for the response
+interface PredictionResponse {
+  Prediction: string;
+  Probability: number;
+  RiskLevel: string;
 }
 
-export default function DiagnosisScreen() {
-  // Initialize formData with InputData type
-  const [formData, setFormData] = useState<InputData>({
-    Pregnancies: '',
-    Glucose: '',
-    BloodPressure: '',
-    SkinThickness: '',
-    Insulin: '',
-    BMI: '',
-    DiabetesPedigreeFunction: '',
-    Age: '',
-  });
-
-  const [diagnosis, setDiagnosis] = useState<number | null>(null);
-
-  // Handle input change and update formData
-  const handleInputChange = (name: keyof InputData, value: string) => {
-    setFormData((prevState) => ({
-      ...prevState,
-      [name]: value,
-    }));
-  };
+const DiagnosisScreen = () => {
+  const [pregnancies, setPregnancies] = useState('');
+  const [glucose, setGlucose] = useState('');
+  const [bloodPressure, setBloodPressure] = useState('');
+  const [skinThickness, setSkinThickness] = useState('');
+  const [insulin, setInsulin] = useState('');
+  const [bmi, setBmi] = useState('');
+  const [diabetesPedigreeFunction, setDiabetesPedigreeFunction] = useState('');
+  const [age, setAge] = useState('');
 
   const handleSubmit = async () => {
-    // Sanitize input by replacing commas with dots for decimal numbers
-    const sanitizedFormData = Object.fromEntries(
-      Object.entries(formData).map(([key, value]) => [
-        key,
-        value.replace(',', '.'),
-      ])
-    );
-  
+    const inputData = {
+      Pregnancies: parseInt(pregnancies),
+      Glucose: parseInt(glucose),
+      BloodPressure: parseInt(bloodPressure),
+      SkinThickness: parseInt(skinThickness),
+      Insulin: parseInt(insulin),
+      BMI: parseFloat(bmi),
+      DiabetesPedigreeFunction: parseFloat(diabetesPedigreeFunction),
+      Age: parseInt(age),
+    };
+
     try {
-      const response = await fetch('http://127.0.0.1:5000/predict', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(sanitizedFormData),  // send sanitized data
-      });
-  
-      const data = await response.json();
-      setDiagnosis(data['Diagnosis prediction']);
-  
-      Alert.alert('Diagnosis', data['Diagnosis prediction'] === 1 ? 'Positive for Diabetes' : 'Negative for Diabetes');
+      // Log the input data to see if it's correct
+      console.log("Sending data:", inputData);
+
+      // Sending POST request to the server
+      const response = await axios.post<PredictionResponse>('http://127.0.0.1:5000/predict', inputData);
+
+      // Log the response to make sure it's being received
+      console.log("Response data:", response.data);
+
+      const { Prediction, Probability, RiskLevel } = response.data;
+
+      // Show alert if response is correct
+      Alert.alert(
+        'Prediction Result',
+        `Prediction: ${Prediction}\nProbability: ${Probability}\nRisk Level: ${RiskLevel}`
+      );
     } catch (error) {
-      console.error(error);
-      Alert.alert('Error', 'Something went wrong. Please try again later.');
+      console.error("Error:", error);
+      Alert.alert('Error', 'Something went wrong. Please try again.');
     }
   };
-  
+
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#FFFFFF', dark: '#FFFFFF' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/adaptive-icon.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <View style={styles.formContainer}>
-        <Text style={styles.title}>Enter Your Medical Data</Text>
-        {Object.keys(formData).map((field) => (
-          <TextInput
-            key={field}
-            style={styles.input}
-            placeholder={field}
-            keyboardType="numeric"
-            value={formData[field as keyof InputData]}
-            onChangeText={(value) => handleInputChange(field as keyof InputData, value)}
-          />
-        ))}
+    <View style={styles.container}>
+      <Text style={styles.header}>Diabetes Prediction</Text>
 
-        <Button title="Submit" onPress={handleSubmit} />
+      <TextInput
+        style={styles.input}
+        placeholder="Pregnancies (integer)"
+        keyboardType="numeric"
+        value={pregnancies}
+        onChangeText={setPregnancies}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Glucose (integer)"
+        keyboardType="numeric"
+        value={glucose}
+        onChangeText={setGlucose}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Blood Pressure (integer)"
+        keyboardType="numeric"
+        value={bloodPressure}
+        onChangeText={setBloodPressure}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Skin Thickness (integer)"
+        keyboardType="numeric"
+        value={skinThickness}
+        onChangeText={setSkinThickness}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Insulin (integer)"
+        keyboardType="numeric"
+        value={insulin}
+        onChangeText={setInsulin}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="BMI (decimal)"
+        keyboardType="decimal-pad"
+        value={bmi}
+        onChangeText={setBmi}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Diabetes Pedigree Function (decimal)"
+        keyboardType="decimal-pad"
+        value={diabetesPedigreeFunction}
+        onChangeText={setDiabetesPedigreeFunction}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Age (integer)"
+        keyboardType="numeric"
+        value={age}
+        onChangeText={setAge}
+      />
 
-        {diagnosis !== null && (
-          <Text style={styles.diagnosisResult}>
-            Diagnosis: {diagnosis === 1 ? 'Positive for Diabetes' : 'Negative for Diabetes'}
-          </Text>
-        )}
-      </View>
-    </ParallaxScrollView>
+      <Button title="Submit" onPress={() => { console.log("Submit button clicked!"); handleSubmit(); }} />
+    </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  formContainer: {
+  container: {
+    flex: 1,
+    justifyContent: 'center',
     padding: 16,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 8,
-    margin: 16,
+    backgroundColor: '#fff',
   },
-  title: {
-    fontSize: 18,
+  header: {
+    fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 16,
+    textAlign: 'center',
   },
   input: {
     height: 40,
     borderColor: '#ccc',
     borderWidth: 1,
-    borderRadius: 8,
     marginBottom: 12,
-    paddingHorizontal: 8,
-  },
-  diagnosisResult: {
-    marginTop: 16,
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#007BFF',
-  },
-  reactLogo: {
-    height: 200,
-    width: 200,
-    alignSelf: 'center',
-    marginTop: 16,
+    paddingLeft: 8,
+    borderRadius: 4,
   },
 });
+
+export default DiagnosisScreen;

@@ -1,85 +1,117 @@
-import numpy as np # linear algebra
-import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+import numpy as np
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.impute import SimpleImputer
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.impute import SimpleImputer # for handling missing values
-from sklearn.utils import resample # for handling imbalanced data
-from sklearn.model_selection import train_test_split # for splitting the data
-from sklearn.preprocessing import StandardScaler # for scaling the data
-# IMPORTS FOR RANDOM FOREST 
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
-import pickle
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import joblib
+from pathlib import Path
+
+app = Flask(__name__)
+CORS(app)
 
 ''' IMPORTING DATA '''
-data = pd.read_csv('app\data\pima-indians-diabetes.csv')
+data = pd.read_csv('app/data/pima-indians-diabetes.csv')
 
-''' OBSERVING DATA - SEE JOURNAL NOTES FOR MORE DETAILS '''
-# data.head()
-# data.info()
-# data.describe(include='all')
+''' HANDLE MISSING VALUES '''
+imputer = SimpleImputer(strategy='mean')
+data = pd.DataFrame(imputer.fit_transform(data), columns=data.columns)
 
-''' DATA PREPROCESSING '''
-sns.heatmap(data.isnull(),cbar = False, cmap = 'magma') # Checking for missing values
-data.isnull().sum()
+''' SEPARATE FEATURES X AND TARGET VARIABLES Y'''
+# Ensure 'Case Number' exists before dropping it
+columns_to_drop = ['Outcome']  # Always drop the 'Outcome' column
+if 'Case Number' in data.columns:
+    columns_to_drop.append('Case Number')
 
-''' were null values replaced with 0s? - handling this '''
-error = ['Glucose', 'BloodPressure', 'SkinThickness', 'Insulin','BMI', 'DiabetesPedigreeFunction']
-data[error].isin([0]).sum()
-
-data[error] = data[error].replace(0, np.NaN) # temporarily replace 0s with NaN
-data.isnull().sum()
-
-''' impute null values and fill with mean '''
-si = SimpleImputer(missing_values=np.nan, strategy='mean')
-data[error] = si.fit_transform(data[error])
-
-'''checking null values are fixed - yes'''
-data.isnull().sum()
-
-''' is data balanced or imbalanced? - imbalanced '''
-sns.countplot(data['Outcome'])
-data['Outcome'].value_counts()
-# plt.show()
-
-''' using upsampling to balance data '''
-data_majority = data[data['Outcome'] == 0]
-data_minority = data[data['Outcome'] == 1]
-upsample = resample(data_minority, replace=True, n_samples=500, random_state=42)   
-data = pd.concat([data_majority, upsample])
-
-''' checking if data is balanced '''
-sns.countplot(data['Outcome'])
-data['Outcome'].value_counts()
-# plt.show()
-
-''' checking Co-relation '''
-plt.figure(figsize=(8, 6))
-corr = data.corr()  
-sns.heatmap(corr, annot=True, cbar=False, cmap='icefire')
-# plt.show()
-
-''' SPLITTING THE DATA '''
-x = data.drop('Outcome', axis=1)
+# Drop columns safely
+x = data.drop(columns=columns_to_drop, axis=1)
 y = data['Outcome']
 
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3, random_state=2529)
-x_train.shape, x_test.shape, y_train.shape, y_test.shape
+''' STANDARDISE THE FEATURES '''
+scaler = StandardScaler()
+x = scaler.fit_transform(x)
 
-''' SCALING THE DATA '''
-ss = StandardScaler()
-x_train = ss.fit_transform(x_train)
-x_test = ss.transform(x_test)
+''' SPLITTING THE DATA '''
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, stratify=y, random_state=42)
 
-''' RANDOM FOREST '''
-rf = RandomForestClassifier() # initialise random forest classifier
-rf.fit(x_train, y_train) # trains model using data (x_train) and target (y_train)
-predict_rf = rf.predict(x_test)
+''' DEFINE PARAMETER GRID FOR GRID SEARCH '''
+param_grid = {
+    'n_estimators': [50, 100, 200],
+    'max_depth': [None, 10, 20],
+    'min_samples_split': [2, 5, 10],
+    'min_samples_leaf': [1, 2, 4],
+}
 
-print(classification_report(y_test, predict_rf))
-print(confusion_matrix(y_test, predict_rf))
+''' TRAIN RF CLASSIFIER USING GRID SEARCH FOR HYPERPARAMETER TUNING'''
+rf_classifier = GridSearchCV(RandomForestClassifier(random_state=42), param_grid, cv=5, refit=True, verbose=0)
+rf_classifier.fit(x_train, y_train)
 
-''' SAVING THE MODEL '''
-with open('app/models/random_forest.pkl', 'wb') as model_file:
-    pickle.dump(rf, model_file)
-print("Model saved successfully!")
+''' CREATE MODEL DIRECTORY IF IT DOESN'T EXIST '''
+model_dir = Path('app/model')
+model_dir.mkdir(parents=True, exist_ok=True)
+
+''' SAVE THE TRAINED MODEL AND SCALER '''
+joblib.dump(rf_classifier, model_dir / 'rf_classifier.pkl')
+joblib.dump(scaler, model_dir / 'scaler.pkl')
+
+''' LOAD TRAINED MODEL AND SCALER '''
+model = joblib.load(model_dir / 'rf_classifier.pkl')
+scaler = joblib.load(model_dir / 'scaler.pkl')
+
+''' API ROUTE TO HANDLE PREDICTIONS '''
+@app.route('/predict', methods=['POST'])
+def predict():
+    try:
+        # Parse JSON input
+        input_data = request.json
+        
+        # Extract feature values from input
+        features = [
+            input_data['Pregnancies'], 
+            input_data['Glucose'], 
+            input_data['BloodPressure'], 
+            input_data['SkinThickness'], 
+            input_data['Insulin'], 
+            input_data['BMI'], 
+            input_data['DiabetesPedigreeFunction'], 
+            input_data['Age']
+        ]
+        
+        # Define the feature names as per your training data
+        feature_names = ['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age']
+        
+        # Convert the list of features into a DataFrame with correct feature names
+        features_df = pd.DataFrame([features], columns=feature_names)
+        
+        # Standardize the input features
+        standardized_features = scaler.transform(features_df)
+        
+        # Get predictions and probabilities
+        probability = model.predict_proba(standardized_features)[0][1]
+        prediction = model.predict(standardized_features)[0]
+        
+        # Determine risk level based on probability (remove 'Medium Risk')
+        if probability < 0.50:
+            risk_level = 'Low Risk'
+        else:
+            risk_level = 'High Risk'
+        
+        # Response
+        response = {
+            'Prediction': 'GDM' if prediction == 1 else 'Non GDM',
+            'Probability': round(probability, 2),
+            'Risk Level': risk_level
+        }
+        return jsonify(response)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
