@@ -6,7 +6,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import csv
 
-data = pd.read_csv('app/data/pima-indians-diabetes.csv')
+data = pd.read_csv(r"C:\Users\Tayyeba\Desktop\Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques\diabetes-sense\app\data\pima.csv")
 # print(data.head())
 # data.info()
 # print(data.isnull().sum())
@@ -139,3 +139,11 @@ def normalisation(X):
     return rescaledX[:5]
     
 print(normalisation(X))
+
+# Save as CSV
+clean_data.to_csv(r"C:\Users\Tayyeba\Desktop\Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques\diabetes-sense\app\data\preprocessed_pima.csv", index=False)
+
+# Save as Pickle (for faster loading)
+import pickle
+with open(r"C:\Users\Tayyeba\Desktop\Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques\diabetes-sense\app\data\preprocessed_pima.pkl", "wb") as f:
+    pickle.dump(clean_data, f)
