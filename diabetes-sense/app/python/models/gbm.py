@@ -1,14 +1,12 @@
-from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
-from sklearn.datasets import load_digits
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from lime import lime_tabular
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.model_selection import GridSearchCV
 
-# setting SEED for reproducibility 
-SEED = 23
+import warnings
+
+warnings.filterwarnings("ignore")
 
 # importing dataset
 data = pd.read_csv(r"C:\Users\Tayyeba\Desktop\Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques\diabetes-sense\app\data\pima.csv")
@@ -17,23 +15,37 @@ data = pd.read_csv(r"C:\Users\Tayyeba\Desktop\Diabetes-Prediction-using-Machine-
 X = data[['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age']] # Features
 y = data['Outcome'] # Target variable
 
-# splitting dataset
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=SEED)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=42)
 
-# instantiate GBM Classifier 
-gbc = GradientBoostingClassifier(n_estimators = 300,
-                                 learning_rate = 0.05,
-                                 random_state = 100,
-                                 max_features = 8)
+param_grid = {
+    'n_estimators': [50, 100, 150],
+    'learning_rate': [0.01, 0.1, 1],
+    'max_depth': [3, 5, 7]
+}
 
-# fit model to training data
-gbc.fit(X_train, y_train)
+gbc = GradientBoostingClassifier()
 
-# predict on test data
-y_pred = gbc.predict(X_test)
+grid_search = GridSearchCV(estimator = gbc,
+                           param_grid = param_grid,
+                           cv = 5,
+                           scoring = 'accuracy',
+                           n_jobs = -1)
 
-# accuracy
-accuracy = accuracy_score(y_test, y_pred)
-print(f"Gradient Boosting Classifier Accuracy: {accuracy:.2f}")
+grid_search.fit(X_train, y_train)
 
-### LIME IMPLEMENTATION
+# Get the best parameters and best model
+best_params = grid_search.best_params_
+best_model = grid_search.best_estimator_
+
+y_pred_best = best_model.predict(X_test)
+
+accuracy = accuracy_score(y_test, y_pred_best)
+print(f"Accuracy: {accuracy}")
+classification_rep = classification_report(y_test, y_pred_best)
+print(f"Classification Report: {classification_rep}")
+
+# sample prediction
+sample = X_test.iloc[0:1]
+prediction = best_model.predict(sample)
+print(f"Sample Patient: {sample.to_dict()}")
+print(f"Predicted Diagnosis: {'Diabetic' if prediction[0] == 1 else 'Not Diabetic'}")

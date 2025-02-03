@@ -61,16 +61,16 @@ explanation = explainer.explain_instance(sample.values[0], rf_classifier.predict
 explanation.show_in_notebook(show_table=True)
 
 ### SHAP IMPLEMENTATION
-# load JS visualization code to notebook
-shap.initjs()
+# # load JS visualization code to notebook
+# shap.initjs()
 
-# Create the explainer
-explainer = shap.TreeExplainer(rf_classifier)
+# # Create the explainer
+# explainer = shap.TreeExplainer(rf_classifier)
 
-shap_values = explainer.shap_values(X_test)
+# shap_values = explainer.shap_values(X_test)
 
-print("Variable Importance Plot - Global Interpretation")
-figure = plt.figure()
-shap.summary_plot(shap_values, X_test)
-shap.summary_plot(shap_values[1], X_test)
+# print("Variable Importance Plot - Global Interpretation")
+# figure = plt.figure()
+# shap.summary_plot(shap_values, X_test)
+# shap.summary_plot(shap_values[1], X_test)
 
