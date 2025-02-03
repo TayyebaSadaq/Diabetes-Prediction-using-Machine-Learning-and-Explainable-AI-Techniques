@@ -18,7 +18,7 @@ import shap
 import warnings
 
 ### IMPORTING PREPROCESSED DATA
-data = pd.read_csv(r"C:\Users\Tayyeba\Desktop\Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques\diabetes-sense\app\data\preprocessed_pima.csv")
+data = pd.read_csv(r"C:\Users\tayye\Desktop\Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques\diabetes-sense\app\data\preprocessed_pima.csv")
 
 ### define the features and target variables
 X = data[['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age']] # Features
@@ -56,7 +56,7 @@ for each in models:
     
 ### SAVING MODELS    
 model_names = ["logistic_regression.pkl", "random_forest.pkl", "gradient_boosting.pkl"]
-model_folder = r"C:\Users\Tayyeba\Desktop\Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques\diabetes-sense\app\models"
+model_folder = r"C:\Users\Tayye\Desktop\Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques\diabetes-sense\app\models"
 for each, name in zip(models, model_names):
     joblib.dump(each, model_folder + "\\" + name)
     print(f"{name} saved successfully at {model_folder}")
