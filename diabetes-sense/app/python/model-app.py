@@ -8,9 +8,9 @@ app = Flask(__name__)
 
 # Load the saved models
 model_paths = {
-    "logistic_regression": "app/models/logistic_regression.pkl",
-    "random_forest": "app/models/random_forest.pkl",
-    "gradient_boosting": "app/models/gradient_boosting.pkl",
+    "logistic_regression": "/home/tayyebasadaq/Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques/diabetes-sense/app/models/logistic_regression.pkl",
+    "random_forest": "/home/tayyebasadaq/Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques/diabetes-sense/app/models/random_forest.pkl",
+    "gradient_boosting": "/home/tayyebasadaq/Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques/diabetes-sense/app/models/gradient_boosting.pkl",
 }
 
 models = {name: joblib.load(path) for name, path in model_paths.items()}
