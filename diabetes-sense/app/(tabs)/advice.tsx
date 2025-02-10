@@ -1,15 +1,21 @@
 import { Image, StyleSheet, Platform } from 'react-native';
 
+import { HelloWave } from '@/components/HelloWave';
+import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { flingHandlerName } from 'react-native-gesture-handler/lib/typescript/handlers/FlingGestureHandler';
 
 export default function AdviceScreen() {
   return (
-     /*blank page*/
-
-     <title>Hello</title>
-
+    <ParallaxScrollView
+      headerBackgroundColor={{ light: '#FFFFFF', dark: '#FFFFFF' }}
+      headerImage={
+        <Image
+          source={require('@/assets/images/adaptive-icon.png')}
+          style={styles.reactLogo}
+        />
+      }>
+    </ParallaxScrollView>
   );
 }
 
