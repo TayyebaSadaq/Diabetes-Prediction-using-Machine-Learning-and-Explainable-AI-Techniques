@@ -1,73 +1,38 @@
-import { Image, StyleSheet, Platform, TextInput, Button } from 'react-native';
-import React, { useState } from "react";
-import { View } from 'react-native';
+import { Image, StyleSheet, Platform } from 'react-native';
+
+import { HelloWave } from '@/components/HelloWave';
+import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 
 export default function DiagnosisScreen() {
-  const [formData, setFormData] = useState<{
-    Pregnancies: string;
-    Glucose: string;
-    BloodPressure: string;
-    SkinThickness: string;
-    Insulin: string;
-    BMI: string;
-    DiabetesPedigreeFunction: string;
-    Age: string;
-  }>({
-    Pregnancies: '',
-    Glucose: '',
-    BloodPressure: '',
-    SkinThickness: '',
-    Insulin: '',
-    BMI: '',
-    DiabetesPedigreeFunction: '',
-    Age: ''
-  });
-
-  const handleChange = (key: keyof typeof formData, value: string) => {
-    setFormData({ ...formData, [key]: value });
-  };
-
-  const handleSubmit = () => {
-    console.log("User input:", formData);
-    // Add API request logic here
-  };
-
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText style={styles.title}>Enter Your Details</ThemedText>
-      {Object.keys(formData).map((key) => (
-        <TextInput
-          key={key}
-          style={styles.input}
-          placeholder={key}
-          keyboardType="numeric"
-          value={formData[key as keyof typeof formData]}
-          onChangeText={(text) => handleChange(key as keyof typeof formData, text)}
+    <ParallaxScrollView
+      headerBackgroundColor={{ light: '#FFFFFF', dark: '#FFFFFF' }}
+      headerImage={
+        <Image
+          source={require('@/assets/images/adaptive-icon.png')}
+          style={styles.reactLogo}
         />
-      ))}
-      <Button title="Submit" onPress={handleSubmit} />
-    </ThemedView>
+      }>
+    </ParallaxScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 16,
+  titleContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
+  stepContainer: {
+    gap: 8,
+    marginBottom: 8,
   },
-  input: {
-    width: '80%',
-    padding: 10,
-    marginVertical: 8,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
+  reactLogo: {
+    height: 500,
+    width: 500,
+    bottom: 0,
+    left: 0,
   },
 });

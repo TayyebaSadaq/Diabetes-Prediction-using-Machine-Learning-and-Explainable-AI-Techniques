@@ -7,8 +7,13 @@ random forest
 - [ ] shap xai implemented
 
 gradient boosting model
-- [ ] ml model implemented
-- [ ] lime xai implemented
+- [x] ml model implemented
+- [x] lime xai implemented
+- [ ] shap xai implemented
+
+Logistic Regression model
+- [x] ml model implemented
+- [x] lime xai implemented
 - [ ] shap xai implemented
 
 neural network
