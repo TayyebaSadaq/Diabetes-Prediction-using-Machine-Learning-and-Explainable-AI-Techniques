@@ -1,38 +1,150 @@
-import { Image, StyleSheet, Platform } from 'react-native';
-
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
+import { Image, StyleSheet, Platform, TextInput, Button, ScrollView } from 'react-native';
+import React, { useState } from "react";
+import { View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 
 export default function DiagnosisScreen() {
+  const [formData, setFormData] = useState<{
+    Pregnancies: string;
+    Glucose: string;
+    BloodPressure: string;
+    SkinThickness: string;
+    Insulin: string;
+    BMI: string;
+    DiabetesPedigreeFunction: string;
+    Age: string;
+  }>({
+    Pregnancies: '',
+    Glucose: '',
+    BloodPressure: '',
+    SkinThickness: '',
+    Insulin: '',
+    BMI: '',
+    DiabetesPedigreeFunction: '',
+    Age: ''
+  });
+
+  const [results, setResults] = useState<any>(null);
+
+  const handleChange = (key: keyof typeof formData, value: string) => {
+    setFormData({ ...formData, [key]: value });
+  };
+
+  const handleSubmit = async () => {
+    console.log("User input:", formData);
+
+    // Convert form data to numeric types
+    const numericFormData = {
+      Pregnancies: parseFloat(formData.Pregnancies),
+      Glucose: parseFloat(formData.Glucose),
+      BloodPressure: parseFloat(formData.BloodPressure),
+      SkinThickness: parseFloat(formData.SkinThickness),
+      Insulin: parseFloat(formData.Insulin),
+      BMI: parseFloat(formData.BMI),
+      DiabetesPedigreeFunction: parseFloat(formData.DiabetesPedigreeFunction),
+      Age: parseFloat(formData.Age)
+    };
+
+    try {
+      const response = await fetch('http://localhost:5000/predict', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(numericFormData)
+      });
+
+      const result = await response.json();
+      console.log('Diagnosis results:', result);
+      setResults(result);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#FFFFFF', dark: '#FFFFFF' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/adaptive-icon.png')}
-          style={styles.reactLogo}
+    <ScrollView contentContainerStyle={styles.container}>
+      <ThemedText style={styles.title}>Enter Your Details</ThemedText>
+      {Object.keys(formData).map((key) => (
+        <TextInput
+          key={key}
+          style={styles.input}
+          placeholder={key}
+          keyboardType="numeric"
+          value={formData[key as keyof typeof formData]}
+          onChangeText={(text) => handleChange(key as keyof typeof formData, text)}
         />
-      }>
-    </ParallaxScrollView>
+      ))}
+      <Button title="Submit" onPress={handleSubmit} />
+      {results && (
+        <View style={styles.resultsContainer}>
+          <ThemedText style={styles.resultsTitle}>Diagnosis Results:</ThemedText>
+          {Object.keys(results).map((model) => (
+            <View key={model} style={styles.resultItem}>
+              <ThemedText style={styles.resultText}>
+                Model: {model}
+              </ThemedText>
+              <ThemedText style={styles.resultText}>
+                Prediction: {results[model].prediction}
+              </ThemedText>
+              <ThemedText style={styles.resultText}>
+                Confidence: {(results[model].confidence * 100).toFixed(2)}%
+              </ThemedText>
+              <ThemedText style={styles.resultText}>
+                LIME Explanation:
+              </ThemedText>
+              <Image
+                source={{ uri: `data:image/png;base64,${results[model].lime_explanation_image}` }}
+                style={styles.explanationImage}
+              />
+            </View>
+          ))}
+        </View>
+      )}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  container: {
+    padding: 16,
     alignItems: 'center',
-    gap: 8,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
   },
-  reactLogo: {
-    height: 500,
-    width: 500,
-    bottom: 0,
-    left: 0,
+  input: {
+    width: '80%',
+    padding: 10,
+    marginVertical: 8,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+  },
+  resultsContainer: {
+    marginTop: 20,
+    width: '100%',
+    alignItems: 'center',
+  },
+  resultsTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  resultItem: {
+    marginBottom: 10,
+    alignItems: 'center',
+  },
+  resultText: {
+    fontSize: 16,
+  },
+  explanationImage: {
+    width: 300,
+    height: 200,
+    resizeMode: 'contain',
+    marginTop: 10,
   },
 });
