@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import joblib
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn import metrics
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.preprocessing import StandardScaler
@@ -21,98 +21,112 @@ warnings.filterwarnings('ignore')
 ### IMPORTING PREPROCESSED DATA
 data = pd.read_pickle(r"C:\Users\tayye\Desktop\Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques\diabetes-sense\app\data\preprocessed_pima.pkl")
 
-### define the features and target variables
+### Define the features and target variables
 X = data[['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age']] # Features
 y = data['Outcome'] # Target variable
 
 ### Splitting the data into training and testing sets (70% training, 30% testing)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-### standardizing the data
+### Standardizing the data
 scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
 
-### LOGISTIC REGRESSION MODEL
-lr = LogisticRegression(max_iter=500)
-lr.fit(X_train_scaled, y_train)
-y_pred_lr = lr.predict(X_test_scaled)
+# Hyperparameter grids
+param_grid_lr = {
+    'C': [0.1, 1, 10, 100],
+    'solver': ['liblinear', 'saga']
+}
+
+param_grid_rf = {
+    'n_estimators': [100, 200, 300],
+    'max_features': ['auto', 'sqrt', 'log2'],
+    'max_depth': [4, 6, 8, 10],
+    'criterion': ['gini', 'entropy']
+}
+
+param_grid_gmb = {
+    'n_estimators': [100, 200, 300],
+    'learning_rate': [0.01, 0.1, 0.2],
+    'max_depth': [3, 4, 5]
+}
+
+# Logistic Regression with GridSearchCV
+grid_search_lr = GridSearchCV(LogisticRegression(max_iter=500), param_grid_lr, cv=5, scoring='accuracy')
+grid_search_lr.fit(X_train_scaled, y_train)
+best_lr = grid_search_lr.best_estimator_
+y_pred_lr = best_lr.predict(X_test_scaled)
 accuracy_lr = accuracy_score(y_test, y_pred_lr)
 classification_rep_lr = classification_report(y_test, y_pred_lr)
-print(f"Logistic Regression Model")
+print(f"Logistic Regression Model (Best Parameters: {grid_search_lr.best_params_})")
 print(f"Accuracy: {accuracy_lr:.2f}")
 print("\nClassification Report:\n", classification_rep_lr)
 
-# Sample prediction for LR
-sample_lr = pd.DataFrame(X_test_scaled).iloc[0:1]
-prediction_lr = lr.predict(sample_lr)
-sample_dict_lr = sample_lr.iloc[0].to_dict()
-print(f"\n\nSample Patient: {sample_dict_lr}")
-print(f"Predicted Diagnosis: {'Diabetic' if prediction_lr[0] == 1 else 'Not Diabetic'}")
-
-# LIME For Logistic Regression  (which use scaled data)
-explainer_lr = LimeTabularExplainer(X_train.values, mode="classification", feature_names=X_train.columns)
-exp_lr = explainer_lr.explain_instance(sample_lr.values[0], lr.predict_proba, num_features=8)
-exp_lr.show_in_notebook(show_table=True)
-
-
-# Ensure X_train and X_test are DataFrames - for RF model ONLY
-X_train = pd.DataFrame(X_train)
-X_test = pd.DataFrame(X_test)
-
-### RANDOM FOREST MODEL
-rf = RandomForestClassifier()
-rf.fit(X_train, y_train)
-y_pred_rf = rf.predict(X_test)
+# Random Forest with GridSearchCV
+grid_search_rf = GridSearchCV(RandomForestClassifier(), param_grid_rf, cv=5, scoring='accuracy')
+grid_search_rf.fit(X_train, y_train)
+best_rf = grid_search_rf.best_estimator_
+y_pred_rf = best_rf.predict(X_test)
 accuracy_rf = accuracy_score(y_test, y_pred_rf)
 classification_rep_rf = classification_report(y_test, y_pred_rf)
-print(f"Random Forest Model")
+print(f"Random Forest Model (Best Parameters: {grid_search_rf.best_params_})")
 print(f"Accuracy: {accuracy_rf:.2f}")
 print("\nClassification Report:\n", classification_rep_rf)
 
-# Sample prediction for RF
-sample_rf = X_test.iloc[0:1]  # Using iloc to get a single row as a DataFrame
-prediction_rf = rf.predict(sample_rf)
-sample_dict_rf = sample_rf.iloc[0].to_dict()
-print(f"\n\nSample Patient: {sample_dict_rf}")
-print(f"Predicted Diagnosis: {'Diabetic' if prediction_rf[0] == 1 else 'Not Diabetic'}")
-
-# LIME For Random Forest (which uses non-scaled data)
-explainer_rf = LimeTabularExplainer(X_train.values, mode="classification", feature_names=X_train.columns)
-exp_rf = explainer_rf.explain_instance(sample_rf.values[0], rf.predict_proba, num_features=8)
-exp_rf.show_in_notebook(show_table=True)
-
-
-### GRADIENT BOOSTING MODEL
-gmb = GradientBoostingClassifier()
-gmb.fit(X_train_scaled, y_train)
-y_pred_gmb = gmb.predict(X_test_scaled)
+# Gradient Boosting with GridSearchCV
+grid_search_gmb = GridSearchCV(GradientBoostingClassifier(), param_grid_gmb, cv=5, scoring='accuracy')
+grid_search_gmb.fit(X_train_scaled, y_train)
+best_gmb = grid_search_gmb.best_estimator_
+y_pred_gmb = best_gmb.predict(X_test_scaled)
 accuracy_gmb = accuracy_score(y_test, y_pred_gmb)
 classification_rep_gmb = classification_report(y_test, y_pred_gmb)
-print(f"Gradient Boosting Model")
+print(f"Gradient Boosting Model (Best Parameters: {grid_search_gmb.best_params_})")
 print(f"Accuracy: {accuracy_gmb:.2f}")
 print("\nClassification Report:\n", classification_rep_gmb)
 
-# Sample prediction for GMB
-sample_gmb = pd.DataFrame(X_test_scaled).iloc[0:1]
-prediction_gmb = gmb.predict(sample_gmb)
-sample_dict_gmb = sample_gmb.iloc[0].to_dict()
-print(f"\n\nSample Patient: {sample_dict_gmb}")
-print(f"Predicted Diagnosis: {'Diabetic' if prediction_gmb[0] == 1 else 'Not Diabetic'}")
+# Sample prediction and LIME explanation for each model
+def sample_prediction_and_explanation(model, model_name, sample, X_train, X_train_scaled, X_test, X_test_scaled, y_test):
+    if model_name == "Random Forest":
+        sample_data = X_test.iloc[sample:sample+1]
+        actual_label = y_test.iloc[sample]
+    else:
+        sample_data = pd.DataFrame(X_test_scaled).iloc[sample:sample+1]
+        actual_label = y_test.iloc[sample]
 
-# LIME For Gradient Boosting (which uses scaled data)
-explainer_gmb = LimeTabularExplainer(X_train.values, mode="classification", feature_names=X_train.columns)
-exp_gmb = explainer_gmb.explain_instance(sample_gmb.values[0], gmb.predict_proba, num_features=8)
-exp_gmb.show_in_notebook(show_table=True)
+    prediction = model.predict(sample_data)
+    sample_dict = sample_data.iloc[0].to_dict()
+    print(f"\n\nSample Patient: {sample_dict}")
+    print(f"Actual Diagnosis: {'Diabetic' if actual_label == 1 else 'Not Diabetic'}")
+    print(f"Predicted Diagnosis: {'Diabetic' if prediction[0] == 1 else 'Not Diabetic'}")
 
+    # LIME explanation
+    explainer = LimeTabularExplainer(X_train.values, mode="classification", feature_names=X_train.columns)
+    exp = explainer.explain_instance(sample_data.values[0], model.predict_proba, num_features=8)
+    exp.show_in_notebook(show_table=True)
 
-### SAVING MODELS    
-models = [lr, rf, gmb]
+# Sample prediction and explanation for Logistic Regression
+sample_prediction_and_explanation(best_lr, "Logistic Regression", 0, X_train, X_train_scaled, X_test, X_test_scaled, y_test)
+
+# Sample prediction and explanation for Random Forest
+sample_prediction_and_explanation(best_rf, "Random Forest", 0, X_train, X_train_scaled, X_test, X_test_scaled, y_test)
+
+# Sample prediction and explanation for Gradient Boosting
+sample_prediction_and_explanation(best_gmb, "Gradient Boosting", 0, X_train, X_train_scaled, X_test, X_test_scaled, y_test)
+
+# Save the scaler
+scaler_filename = r"C:\Users\tayye\Desktop\Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques\diabetes-sense\app\models\scaler.pkl"
+joblib.dump(scaler, scaler_filename)
+print(f"Scaler saved successfully at {scaler_filename}")
+
+# Save the best models and their accuracies
+models = [best_lr, best_rf, best_gmb]
 model_names = ["logistic_regression.pkl", "random_forest.pkl", "gradient_boosting.pkl"]
+accuracies = [accuracy_lr, accuracy_rf, accuracy_gmb]
 
 model_folder = r"C:\Users\tayye\Desktop\Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques\diabetes-sense\app\models"
 
-# Save each model
-for each, name in zip(models, model_names):
-    joblib.dump(each, model_folder + "\\" + name)
-    print(f"{name} saved successfully at {model_folder}")
+# Save each model and its accuracy
+for each, name, accuracy in zip(models, model_names, accuracies):
+    joblib.dump((each, accuracy), model_folder + "\\" + name)
+    print(f"{name} saved successfully at {model_folder} with accuracy {accuracy:.2f}")
