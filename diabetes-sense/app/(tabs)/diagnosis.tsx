@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
-import { Image, StyleSheet, TextInput, Button, ScrollView, View } from 'react-native';
+import { Image, StyleSheet, Platform, TextInput, Button, ScrollView } from 'react-native';
+import React, { useState } from "react";
+import { View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
 
 export default function DiagnosisScreen() {
   const [formData, setFormData] = useState<{
@@ -24,7 +26,6 @@ export default function DiagnosisScreen() {
   });
 
   const [results, setResults] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
 
   const handleChange = (key: keyof typeof formData, value: string) => {
     setFormData({ ...formData, [key]: value });
@@ -46,7 +47,7 @@ export default function DiagnosisScreen() {
     };
 
     try {
-      const response = await fetch('https://diabetes-prediction-using-machine-42pk.onrender.com', {
+      const response = await fetch('http://localhost:5000/predict', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -55,17 +56,10 @@ export default function DiagnosisScreen() {
       });
 
       const result = await response.json();
-      if (response.ok) {
-        console.log('Diagnosis results:', result);
-        setResults(result);
-        setError(null);
-      } else {
-        console.error('Error:', result.error);
-        setError(result.error);
-      }
+      console.log('Diagnosis results:', result);
+      setResults(result);
     } catch (error) {
       console.error('Error:', error);
-      setError('An unexpected error occurred.');
     }
   };
 
@@ -83,9 +77,6 @@ export default function DiagnosisScreen() {
         />
       ))}
       <Button title="Submit" onPress={handleSubmit} />
-      {error && (
-        <ThemedText style={styles.errorText}>Error: {error}</ThemedText>
-      )}
       {results && (
         <View style={styles.resultsContainer}>
           <ThemedText style={styles.resultsTitle}>Diagnosis Results:</ThemedText>
@@ -99,9 +90,6 @@ export default function DiagnosisScreen() {
               </ThemedText>
               <ThemedText style={styles.resultText}>
                 Confidence: {(results[model].confidence * 100).toFixed(2)}%
-              </ThemedText>
-              <ThemedText style={styles.resultText}>
-                Accuracy: {(results[model].accuracy * 100).toFixed(2)}%
               </ThemedText>
               <ThemedText style={styles.resultText}>
                 LIME Explanation:
@@ -157,10 +145,6 @@ const styles = StyleSheet.create({
     width: 300,
     height: 200,
     resizeMode: 'contain',
-    marginTop: 10,
-  },
-  errorText: {
-    color: 'red',
     marginTop: 10,
   },
 });
