@@ -10,29 +10,35 @@ matplotlib.use('Agg')  # Use the Agg backend for non-interactive plotting
 import matplotlib.pyplot as plt
 import base64
 from io import BytesIO
+import os
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
-# Load the models and their accuracies
+# Define model folder path
+model_folder = os.getenv('MODEL_FOLDER', os.path.join(os.path.dirname(__file__), '..', 'models'))
+
+# Load models and accuracies
 models = {}
 accuracies = {}
 model_names = ["logistic_regression.pkl", "random_forest.pkl", "gradient_boosting.pkl"]
-model_folder = r"C:\Users\tayye\Desktop\Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques\diabetes-sense\app\models"
 
 for name in model_names:
-    model, accuracy = joblib.load(model_folder + "\\" + name)
+    model_path = os.path.join(model_folder, name)
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"Model file not found: {model_path}")
+    model, accuracy = joblib.load(model_path)
     models[name.split('.')[0]] = model
     accuracies[name.split('.')[0]] = accuracy
 
 # Load the scaler
-scaler = joblib.load(r"C:\Users\tayye\Desktop\Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques\diabetes-sense\app\models\scaler.pkl")
+scaler = joblib.load(os.path.join(model_folder, 'scaler.pkl'))
 
 # Example feature list
 FEATURES = ['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age']
 
 # Load training data for LIME explainer
-data = pd.read_pickle(r"C:\Users\tayye\Desktop\Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques\diabetes-sense\app\data\preprocessed_pima.pkl")
+data = pd.read_pickle(os.path.join(os.path.dirname(__file__), '..', 'data', 'preprocessed_pima.pkl'))
 X_train = data[FEATURES]
 
 # Initialize LIME explainer
