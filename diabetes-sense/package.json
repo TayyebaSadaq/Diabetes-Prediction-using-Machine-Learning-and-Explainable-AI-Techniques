@@ -25,7 +25,7 @@
     "chart.js": "^4.4.7",
     "chartjs-chart-geo": "^4.3.4",
     "d3": "^7.9.0",
-    "expo": "~52.0.25",
+    "expo": "^50.0.21",
     "expo-blur": "~14.0.2",
     "expo-constants": "~17.0.4",
     "expo-font": "~13.0.3",
