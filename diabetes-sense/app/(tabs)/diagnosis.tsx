@@ -46,7 +46,7 @@ export default function DiagnosisScreen() {
     };
 
     try {
-      const response = await fetch('https://diabetes-prediction-using-machine-42pk.onrender.com/predict', {
+      const response = await fetch('http://localhost:5000/predict', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
