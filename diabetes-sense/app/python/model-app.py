@@ -60,21 +60,25 @@ def predict():
             if model_name == "random_forest":
                 prediction = model.predict(input_df)[0]
                 confidence = max(model.predict_proba(input_df)[0])
+                lime_input = input_df.values[0]  # Use unscaled data for LIME
             else:
                 prediction = model.predict(input_df_scaled)[0]
                 confidence = max(model.predict_proba(input_df_scaled)[0])
-            
+                lime_input = input_df_scaled[0]  # Use scaled data for LIME
+
             result = "Diabetic" if prediction == 1 else "Not Diabetic"
-            
+
             # Debugging statements
             print(f"Model: {model_name}, Prediction: {result}, Confidence: {confidence}")
             print(f"Input Data: {input_df.values[0]}")
             print(f"Scaled Input Data: {input_df_scaled[0]}")
-            
+
             # Generate LIME explanation
-            exp = explainer.explain_instance(input_df.values[0], model.predict_proba, num_features=8)
+            exp = explainer.explain_instance(
+                lime_input, model.predict_proba, num_features=8
+            )
             lime_explanation = exp.as_list()
-            
+
             # Generate LIME explanation bar chart visualization
             fig, ax = plt.subplots()
             feature_names, feature_importances = zip(*lime_explanation)
@@ -87,13 +91,13 @@ def predict():
             buf.seek(0)
             img_base64 = base64.b64encode(buf.read()).decode('utf-8')
             plt.close(fig)
-            
+
             results[model_name] = {
                 "prediction": result,
                 "confidence": confidence,
                 "accuracy": accuracies[model_name],
                 "lime_explanation": lime_explanation,
-                "lime_explanation_image": img_base64
+                "lime_explanation_image": img_base64,
             }
         
         return jsonify(results)
