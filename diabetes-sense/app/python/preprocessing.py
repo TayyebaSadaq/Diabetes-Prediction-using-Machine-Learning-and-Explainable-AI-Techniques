@@ -94,6 +94,26 @@ plt.show()
 
 print(data.duplicated().sum()) # duplicate checking
 
-# # Save as Pickle (for faster loading)
+# Save as Pickle (for faster loading)
 with open(r"C:\Users\tayye\Desktop\Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques\diabetes-sense\app\data\preprocessed_pima.pkl", "wb") as f:
     pickle.dump(data, f)
+print("Data saved successfully as Pickle.")
+
+# Save as CSV
+data.to_csv(r"C:\Users\tayye\Desktop\Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques\diabetes-sense\app\data\preprocessed_pima.csv", index=False)
+print("Data saved successfully as CSV.")
+
+# Balancing the dataset using undersampling
+class_0 = data[data['Outcome'] == 0]
+class_1 = data[data['Outcome'] == 1]
+
+# Undersample the majority class
+class_0_undersampled = class_0.sample(len(class_1), random_state=42)
+data_balanced = pd.concat([class_0_undersampled, class_1])
+
+# Shuffle the balanced dataset
+data_balanced = data_balanced.sample(frac=1, random_state=42).reset_index(drop=True)
+
+# Save the balanced dataset
+data_balanced.to_csv(r"C:\Users\tayye\Desktop\Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques\diabetes-sense\app\data\balanced_pima.csv", index=False)
+print("Balanced dataset saved successfully as CSV.")

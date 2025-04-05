@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import base64
 from io import BytesIO
 import os
+from sklearn.model_selection import GridSearchCV, cross_val_score
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -38,7 +39,7 @@ scaler = joblib.load(os.path.join(model_folder, 'scaler.pkl'))
 FEATURES = ['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age']
 
 # Load training data for LIME explainer
-data = pd.read_pickle(os.path.join(os.path.dirname(__file__), '..', 'data', 'preprocessed_pima.pkl'))
+data = pd.read_csv(os.path.join(os.path.dirname(__file__), '..', 'data', 'balanced_pima.csv'))  # Updated to use balanced_pima.csv
 X_train = data[FEATURES]
 
 # Initialize LIME explainer
@@ -58,7 +59,7 @@ def predict():
         
         for model_name, model in models.items():
             if model_name == "random_forest":
-                prediction = model.predict(input_df)[0]
+                prediction = model.predict(input_df)[0]  # Use unscaled data for Random Forest
                 confidence = max(model.predict_proba(input_df)[0])
                 lime_input = input_df.values[0]  # Use unscaled data for LIME
             else:
@@ -104,7 +105,52 @@ def predict():
     
     except Exception as e:
         print(f"Error in predict function: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": f"Prediction failed: {str(e)}"}), 500  # Improved error message
+
+@app.route('/tune', methods=['POST'])
+def tune_models():
+    try:
+        # Define hyperparameter grids for each model
+        param_grids = {
+            "logistic_regression": {
+                "C": [0.1, 1, 10],
+                "solver": ["liblinear", "lbfgs"]
+            },
+            "random_forest": {
+                "n_estimators": [50, 100, 200],
+                "max_depth": [None, 10, 20]
+            },
+            "gradient_boosting": {
+                "learning_rate": [0.01, 0.1, 0.2],
+                "n_estimators": [50, 100, 200]
+            }
+        }
+
+        results = {}
+
+        for model_name, model in models.items():
+            if model_name not in param_grids:
+                continue
+
+            param_grid = param_grids[model_name]
+            grid_search = GridSearchCV(model, param_grid, cv=5, scoring='accuracy')
+            grid_search.fit(X_train, data['Outcome'])  # Assuming 'Outcome' is the target column
+
+            # Perform cross-validation with the best parameters
+            best_model = grid_search.best_estimator_
+            cv_scores = cross_val_score(best_model, X_train, data['Outcome'], cv=5, scoring='accuracy')
+
+            results[model_name] = {
+                "best_params": grid_search.best_params_, 
+                "cv_scores": cv_scores.tolist(),
+                "mean_cv_score": np.mean(cv_scores)
+            }
+
+        return jsonify(results)
+
+    except Exception as e:
+        print(f"Error in tune_models function: {e}")
+        return jsonify({"error": f"Model tuning failed: {str(e)}"}), 500  # Improved error message
 
 if __name__ == '__main__':
     app.run(debug=True)
