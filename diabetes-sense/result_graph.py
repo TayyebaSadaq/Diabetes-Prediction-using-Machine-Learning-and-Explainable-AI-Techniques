@@ -26,6 +26,12 @@ scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
 
+# Save the test data to a CSV file for manual testing
+X_test_with_labels = X_test.copy()
+X_test_with_labels['Outcome'] = y_test
+X_test_with_labels.to_csv(r"C:\Users\tayye\Desktop\Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques\diabetes-sense\app\data\test_data.csv", index=False)
+print("Test data saved to test_data.csv")
+
 # Calculate accuracies and confidence scores
 accuracy_train = []
 accuracy_test = []
