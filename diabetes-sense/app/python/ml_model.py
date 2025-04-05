@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import joblib
-from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.model_selection import train_test_split, GridSearchCV, StratifiedKFold, cross_val_score
 from sklearn import metrics
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.preprocessing import StandardScaler
@@ -25,8 +25,8 @@ data = pd.read_pickle(r"C:\Users\tayye\Desktop\Diabetes-Prediction-using-Machine
 X = data[['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age']] # Features
 y = data['Outcome'] # Target variable
 
-### Splitting the data into training and testing sets (70% training, 30% testing)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+### Splitting the data into training and testing sets (80% training, 20% testing)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 ### Standardizing the data
 scaler = StandardScaler()
@@ -52,10 +52,15 @@ param_grid_gmb = {
     'max_depth': [3, 4, 5]
 }
 
-# Logistic Regression with GridSearchCV
-grid_search_lr = GridSearchCV(LogisticRegression(max_iter=500), param_grid_lr, cv=5, scoring='accuracy')
+# Define Stratified K-Fold Cross-Validation
+cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+
+# Logistic Regression with Cross-Validation
+grid_search_lr = GridSearchCV(LogisticRegression(max_iter=500), param_grid_lr, cv=cv, scoring='accuracy')
 grid_search_lr.fit(X_train_scaled, y_train)
 best_lr = grid_search_lr.best_estimator_
+cv_scores_lr = cross_val_score(best_lr, X_train_scaled, y_train, cv=cv, scoring='accuracy')
+print(f"Logistic Regression Cross-Validation Accuracy: {cv_scores_lr.mean():.2f} ± {cv_scores_lr.std():.2f}")
 y_pred_lr = best_lr.predict(X_test_scaled)
 accuracy_lr = accuracy_score(y_test, y_pred_lr)
 classification_rep_lr = classification_report(y_test, y_pred_lr)
@@ -63,10 +68,12 @@ print(f"Logistic Regression Model (Best Parameters: {grid_search_lr.best_params_
 print(f"Accuracy: {accuracy_lr:.2f}")
 print("\nClassification Report:\n", classification_rep_lr)
 
-# Random Forest with GridSearchCV
-grid_search_rf = GridSearchCV(RandomForestClassifier(), param_grid_rf, cv=5, scoring='accuracy')
+# Random Forest with Cross-Validation
+grid_search_rf = GridSearchCV(RandomForestClassifier(), param_grid_rf, cv=cv, scoring='accuracy')
 grid_search_rf.fit(X_train, y_train)
 best_rf = grid_search_rf.best_estimator_
+cv_scores_rf = cross_val_score(best_rf, X_train, y_train, cv=cv, scoring='accuracy')
+print(f"Random Forest Cross-Validation Accuracy: {cv_scores_rf.mean():.2f} ± {cv_scores_rf.std():.2f}")
 y_pred_rf = best_rf.predict(X_test)
 accuracy_rf = accuracy_score(y_test, y_pred_rf)
 classification_rep_rf = classification_report(y_test, y_pred_rf)
@@ -74,10 +81,12 @@ print(f"Random Forest Model (Best Parameters: {grid_search_rf.best_params_})")
 print(f"Accuracy: {accuracy_rf:.2f}")
 print("\nClassification Report:\n", classification_rep_rf)
 
-# Gradient Boosting with GridSearchCV
-grid_search_gmb = GridSearchCV(GradientBoostingClassifier(), param_grid_gmb, cv=5, scoring='accuracy')
+# Gradient Boosting with Cross-Validation
+grid_search_gmb = GridSearchCV(GradientBoostingClassifier(), param_grid_gmb, cv=cv, scoring='accuracy')
 grid_search_gmb.fit(X_train_scaled, y_train)
 best_gmb = grid_search_gmb.best_estimator_
+cv_scores_gmb = cross_val_score(best_gmb, X_train_scaled, y_train, cv=cv, scoring='accuracy')
+print(f"Gradient Boosting Cross-Validation Accuracy: {cv_scores_gmb.mean():.2f} ± {cv_scores_gmb.std():.2f}")
 y_pred_gmb = best_gmb.predict(X_test_scaled)
 accuracy_gmb = accuracy_score(y_test, y_pred_gmb)
 classification_rep_gmb = classification_report(y_test, y_pred_gmb)
@@ -118,6 +127,12 @@ sample_prediction_and_explanation(best_gmb, "Gradient Boosting", 0, X_train, X_t
 scaler_filename = r"C:\Users\tayye\Desktop\Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques\diabetes-sense\app\models\scaler.pkl"
 joblib.dump(scaler, scaler_filename)
 print(f"Scaler saved successfully at {scaler_filename}")
+
+# Save the test data as a CSV file
+test_data_csv_filename = r"C:\Users\tayye\Desktop\Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques\diabetes-sense\app\data\test_data.csv"
+test_data_csv = pd.concat([X_test, y_test], axis=1)
+test_data_csv.to_csv(test_data_csv_filename, index=False)
+print(f"Test data saved successfully as CSV at {test_data_csv_filename}")
 
 # Save the best models and their accuracies
 models = [best_lr, best_rf, best_gmb]
