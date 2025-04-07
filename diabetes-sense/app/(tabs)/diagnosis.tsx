@@ -77,14 +77,16 @@ export default function DiagnosisScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <ThemedText style={styles.title}>Enter Your Details</ThemedText>
       {Object.keys(formData).map((key) => (
-        <TextInput
-          key={key}
-          style={styles.input}
-          placeholder={key}
-          keyboardType="numeric"
-          value={formData[key as keyof typeof formData]}
-          onChangeText={(text) => handleChange(key as keyof typeof formData, text)}
-        />
+        <View key={key} style={styles.inputRow}>
+          <ThemedText style={styles.inputLabel}>{key}:</ThemedText>
+          <TextInput
+            style={styles.input}
+            placeholder={key}
+            keyboardType="numeric"
+            value={formData[key as keyof typeof formData]}
+            onChangeText={(text) => handleChange(key as keyof typeof formData, text)}
+          />
+        </View>
       ))}
       <View style={styles.buttonRow}>
         <View style={styles.submitButton}>
@@ -129,6 +131,10 @@ export default function DiagnosisScreen() {
                   source={{ uri: `data:image/png;base64,${results[model].lime_explanation_image}` }}
                   style={styles.explanationImage}
                 />
+                {/* Display the general text-based explanation */}
+                <ThemedText style={styles.textExplanation}>
+                  {results[model].text_explanation}
+                </ThemedText>
               </View>
             ))}
           </View>
@@ -148,10 +154,21 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 16,
   },
-  input: {
-    width: '80%',
-    padding: 10,
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginVertical: 8,
+    width: '80%',
+  },
+  inputLabel: {
+    width: '40%',
+    fontSize: 16,
+    color: '#333',
+    marginRight: 10,
+  },
+  input: {
+    flex: 1,
+    padding: 10,
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 5,
@@ -216,5 +233,12 @@ const styles = StyleSheet.create({
     height: 200,
     resizeMode: 'contain',
     marginTop: 10,
+  },
+  textExplanation: {
+    marginTop: 10,
+    fontSize: 14,
+    color: '#333',
+    textAlign: 'left',
+    width: '100%',
   },
 });

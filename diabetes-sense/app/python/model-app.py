@@ -92,10 +92,23 @@ def predict():
             )
             lime_explanation = exp.as_list()
 
+            # Define the fixed order of feature names for the graph
+            fixed_feature_order = ['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age']
+            feature_importances_dict = {feature: 0 for feature in fixed_feature_order}  # Initialize all importances to 0
+
+            # Update the feature importances based on the LIME explanation
+            for feature, importance in lime_explanation:
+                simplified_feature = feature.split(' ')[0]  # Simplify the feature name
+                if simplified_feature in feature_importances_dict:
+                    feature_importances_dict[simplified_feature] = importance
+
+            # Prepare data for the graph
+            simplified_feature_names = list(feature_importances_dict.keys())
+            feature_importances = list(feature_importances_dict.values())
+
             # Create a bar chart visualization of the LIME explanation
             fig, ax = plt.subplots()
-            feature_names, feature_importances = zip(*lime_explanation)
-            ax.barh(feature_names, feature_importances, color='blue')
+            ax.barh(simplified_feature_names, feature_importances, color='blue')
             ax.set_xlabel('Feature Importance')
             ax.set_title('LIME Explanation')
             plt.tight_layout()
@@ -105,6 +118,16 @@ def predict():
             img_base64 = base64.b64encode(buf.read()).decode('utf-8')
             plt.close(fig)
 
+            # Simplify feature names for the text explanation
+            top_features = [feature for feature, importance in sorted(feature_importances_dict.items(), key=lambda x: abs(x[1]), reverse=True)[:3]]
+
+            # Generate a simplified, user-friendly explanation with only feature names
+            explanation_text = (
+                f"The model '{model_name.replace('_', ' ').title()}' predicted that the patient is '{result}'. "
+                f"This conclusion was influenced by factors such as {', '.join(top_features)}. "
+                f"The graph above highlights the most important features that contributed to this prediction."
+            )
+
             # Store the results for this model
             results[model_name] = {
                 "prediction": result,
@@ -112,6 +135,7 @@ def predict():
                 "accuracy": accuracies[model_name],
                 "lime_explanation": lime_explanation,
                 "lime_explanation_image": img_base64,
+                "text_explanation": explanation_text,
             }
         
         # Return the results as a JSON response
