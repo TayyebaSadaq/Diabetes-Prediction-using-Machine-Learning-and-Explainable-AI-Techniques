@@ -136,9 +136,6 @@ export default function DiagnosisScreen() {
                 <ThemedText style={styles.resultText}>
                   Confidence: {(results[model].confidence * 100).toFixed(2)}%
                 </ThemedText>
-                <ThemedText style={styles.resultText}>
-                  LIME Explanation:
-                </ThemedText>
                 <Image
                   source={{ uri: `data:image/png;base64,${results[model].lime_explanation_image}` }}
                   style={styles.explanationImage}
@@ -273,9 +270,10 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   explanationImage: {
-    width: '100%',
-    height: 150,
-    resizeMode: 'contain',
+    width: '100%', // Allow the image to take up the full width of its container
+    height: undefined, // Maintain aspect ratio
+    aspectRatio: 1, // Ensure the image is square (1:1 aspect ratio)
+    resizeMode: 'contain', // Ensure the image scales without cropping
     marginTop: 10,
   },
   textExplanation: {

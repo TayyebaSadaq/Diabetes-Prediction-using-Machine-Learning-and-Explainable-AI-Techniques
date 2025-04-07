@@ -106,20 +106,24 @@ def predict():
             simplified_feature_names = list(feature_importances_dict.keys())
             feature_importances = list(feature_importances_dict.values())
 
-            # Create an extremely large bar chart visualization of the LIME explanation
-            fig, ax = plt.subplots(figsize=(50, 50))  # Set figure size to 50x50 inches
-            ax.barh(simplified_feature_names, feature_importances, color='blue')
-            ax.set_xlabel('Feature Importance', fontsize=24)  # Larger font size for x-axis label
-            ax.set_title('LIME Explanation', fontsize=28)  # Larger font size for title
-            ax.tick_params(axis='both', which='major', labelsize=20)  # Larger tick labels
-            plt.tight_layout()
+            # Create a bar chart visualization of the LIME explanation
+            fig, ax = plt.subplots(figsize=(50, 30))  # Large graph size
+            ax.barh(simplified_feature_names, feature_importances, color='blue', height=0.8)
+            ax.set_xlabel('Feature Importance', fontsize=70)
+            ax.set_title('LIME Explanation', fontsize=80)
+            ax.tick_params(axis='both', which='major', labelsize=60)
+            plt.tight_layout(pad=3.0)
 
-            # Save the figure with a higher DPI to achieve 10,000 x 10,000 pixels
+            # Save the figure to a buffer and encode it as base64
             buf = BytesIO()
-            fig.savefig(buf, format="png", dpi=200)  # 50 inches * 200 DPI = 10,000 pixels
+            fig.savefig(buf, format="png", dpi=200)  # High DPI for clarity
             buf.seek(0)
             img_base64 = base64.b64encode(buf.read()).decode('utf-8')
             plt.close(fig)
+
+            # Debugging: Ensure the image is properly encoded
+            if not img_base64:
+                print(f"Error: Failed to encode graph for model {model_name}")
 
             # Simplify feature names for the text explanation
             top_features = [feature for feature, importance in sorted(feature_importances_dict.items(), key=lambda x: abs(x[1]), reverse=True)[:3]]
@@ -137,7 +141,7 @@ def predict():
                 "confidence": confidence,
                 "accuracy": accuracies[model_name],
                 "lime_explanation": lime_explanation,
-                "lime_explanation_image": img_base64,
+                "lime_explanation_image": img_base64,  # Ensure this is properly encoded
                 "text_explanation": explanation_text,
             }
         
