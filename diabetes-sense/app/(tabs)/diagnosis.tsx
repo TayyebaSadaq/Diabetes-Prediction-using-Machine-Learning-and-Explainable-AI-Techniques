@@ -28,7 +28,7 @@ export default function DiagnosisScreen() {
   const [results, setResults] = useState<any>(null);
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
 
-  const models = ['logistic_regression', 'random_forest', 'gradient_boosting']; // Updated model names to match backend
+  const models = ['logistic_regression', 'random_forest', 'gradient_boosting']; 
 
   const handleChange = (key: keyof typeof formData, value: string) => {
     setFormData({ ...formData, [key]: value });
@@ -87,7 +87,9 @@ export default function DiagnosisScreen() {
         />
       ))}
       <View style={styles.buttonRow}>
-        <Button title="Submit" onPress={handleSubmit} style={styles.submitButton} />
+        <View style={styles.submitButton}>
+          <Button title="Submit" onPress={handleSubmit} />
+        </View>
         <View style={styles.toggleMenu}>
           {models.map((model) => (
             <TouchableOpacity
@@ -156,7 +158,7 @@ const styles = StyleSheet.create({
   },
   buttonRow: {
     flexDirection: 'row',
-    justifyContent: 'center', // Center both the submit button and model buttons
+    justifyContent: 'center', 
     alignItems: 'center',
     width: '100%',
     marginVertical: 10,
@@ -164,8 +166,8 @@ const styles = StyleSheet.create({
   toggleMenu: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'center', // Center the model buttons
-    marginLeft: 10, // Add spacing between the submit button and model buttons
+    justifyContent: 'center', 
+    marginLeft: 10, 
   },
   toggleButton: {
     padding: 10,
@@ -183,7 +185,7 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   submitButton: {
-    marginRight: 10, // Add spacing between the submit button and model buttons
+    marginRight: 10, 
   },
   resultsContainer: {
     marginTop: 20,
@@ -196,15 +198,15 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   resultsRow: {
-    flexDirection: 'row', // Arrange items in a row
-    flexWrap: 'wrap', // Allow wrapping to the next row if needed
-    justifyContent: 'space-around', // Distribute items evenly with space around
-    width: '100%', // Ensure full width for proper alignment
+    flexDirection: 'row', 
+    flexWrap: 'wrap', 
+    justifyContent: 'space-around', 
+    width: '100%', 
   },
   resultItem: {
-    marginVertical: 10, // Add vertical margin to separate rows
+    marginVertical: 10, 
     alignItems: 'center',
-    width: '30%', // Allocate one-third of the width for each column
+    width: '30%', 
   },
   resultText: {
     fontSize: 16,

@@ -1,3 +1,4 @@
+# Import necessary libraries for the Flask app, machine learning, and data processing
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import joblib
@@ -13,13 +14,14 @@ from io import BytesIO
 import os
 from sklearn.model_selection import GridSearchCV, cross_val_score
 
+# Initialize the Flask app and enable CORS for cross-origin requests
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app)
 
-# Define model folder path
+# Define the folder where the models are stored
 model_folder = os.getenv('MODEL_FOLDER', os.path.join(os.path.dirname(__file__), '..', 'models'))
 
-# Load models and accuracies
+# Load the machine learning models and their accuracies
 models = {}
 accuracies = {}
 model_names = ["logistic_regression.pkl", "random_forest.pkl", "gradient_boosting.pkl"]
@@ -28,58 +30,69 @@ for name in model_names:
     model_path = os.path.join(model_folder, name)
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"Model file not found: {model_path}")
+    # Load the model and its accuracy from the file
     model, accuracy = joblib.load(model_path)
-    models[name.split('.')[0]] = model
+    models[name.split('.')[0]] = model  # Use the model name without the file extension as the key
     accuracies[name.split('.')[0]] = accuracy
 
-# Load the scaler
+# Load the scaler for preprocessing input data
 scaler = joblib.load(os.path.join(model_folder, 'scaler.pkl'))
 
-# Example feature list
+# Define the list of features expected in the input data
 FEATURES = ['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age']
 
-# Load training data for LIME explainer
-data = pd.read_csv(os.path.join(os.path.dirname(__file__), '..', 'data', 'balanced_pima.csv'))  # Updated to use balanced_pima.csv
+# Load the training data for initializing the LIME explainer
+data = pd.read_csv(os.path.join(os.path.dirname(__file__), '..', 'data', 'balanced_pima.csv'))
 X_train = data[FEATURES]
 
-# Initialize LIME explainer
+# Initialize the LIME explainer with the training data
 explainer = LimeTabularExplainer(X_train.values, mode="classification", feature_names=FEATURES)
 
 @app.route('/predict', methods=['POST'])
 def predict():
+    """
+    Handle POST requests to the /predict endpoint.
+    This function takes input data, preprocesses it, and uses the selected models to make predictions.
+    It also generates LIME explanations for the predictions.
+    """
     try:
+        # Parse the JSON input from the request
         data = request.get_json()
-        input_data = [data.get(feature, 0) for feature in FEATURES]
+        input_data = [data.get(feature, 0) for feature in FEATURES]  # Default to 0 if a feature is missing
         input_df = pd.DataFrame([input_data], columns=FEATURES)
         
-        # Scale the input data
+        # Scale the input data using the preloaded scaler
         input_df_scaled = scaler.transform(input_df)
         
-        selected_models = data.get('models', models.keys())  # Use selected models or default to all
+        # Get the list of selected models from the input, or use all models by default
+        selected_models = data.get('models', models.keys())
         results = {}
         
+        # Iterate through the models and make predictions
         for model_name, model in models.items():
-            if model_name not in selected_models:  # Skip models not selected
+            if model_name not in selected_models:  # Skip models that are not selected
                 continue
 
+            # Handle scaling differences for Random Forest
             if model_name == "random_forest":
-                prediction = model.predict(input_df)[0]  # Use unscaled data for Random Forest
+                prediction = model.predict(input_df)[0]
                 confidence = max(model.predict_proba(input_df)[0])
-                lime_input = input_df.values[0]  # Use unscaled data for LIME
+                lime_input = input_df.values[0]
             else:
                 prediction = model.predict(input_df_scaled)[0]
                 confidence = max(model.predict_proba(input_df_scaled)[0])
-                lime_input = input_df_scaled[0]  # Use scaled data for LIME
+                lime_input = input_df_scaled[0]
 
+            # Convert the prediction to a human-readable result
             result = "Diabetic" if prediction == 1 else "Not Diabetic"
 
-            # Generate LIME explanation
+            # Generate a LIME explanation for the prediction
             exp = explainer.explain_instance(
                 lime_input, model.predict_proba, num_features=8
             )
             lime_explanation = exp.as_list()
 
-            # Generate LIME explanation bar chart visualization
+            # Create a bar chart visualization of the LIME explanation
             fig, ax = plt.subplots()
             feature_names, feature_importances = zip(*lime_explanation)
             ax.barh(feature_names, feature_importances, color='blue')
@@ -92,6 +105,7 @@ def predict():
             img_base64 = base64.b64encode(buf.read()).decode('utf-8')
             plt.close(fig)
 
+            # Store the results for this model
             results[model_name] = {
                 "prediction": result,
                 "confidence": confidence,
@@ -100,14 +114,20 @@ def predict():
                 "lime_explanation_image": img_base64,
             }
         
+        # Return the results as a JSON response
         return jsonify(results)
     
     except Exception as e:
+        # Handle errors gracefully and return an error message
         print(f"Error in predict function: {e}")
         return jsonify({"error": f"Prediction failed: {str(e)}"}), 500
 
 @app.route('/tune', methods=['POST'])
 def tune_models():
+    """
+    Handle POST requests to the /tune endpoint.
+    This function performs hyperparameter tuning for the models using GridSearchCV.
+    """
     try:
         # Define hyperparameter grids for each model
         param_grids = {
@@ -127,6 +147,7 @@ def tune_models():
 
         results = {}
 
+        # Iterate through the models and perform tuning
         for model_name, model in models.items():
             if model_name not in param_grids:
                 continue
@@ -139,17 +160,21 @@ def tune_models():
             best_model = grid_search.best_estimator_
             cv_scores = cross_val_score(best_model, X_train, data['Outcome'], cv=5, scoring='accuracy')
 
+            # Store the tuning results
             results[model_name] = {
                 "best_params": grid_search.best_params_, 
                 "cv_scores": cv_scores.tolist(),
                 "mean_cv_score": np.mean(cv_scores)
             }
 
+        # Return the tuning results as a JSON response
         return jsonify(results)
 
     except Exception as e:
+        # Handle errors gracefully and return an error message
         print(f"Error in tune_models function: {e}")
         return jsonify({"error": f"Model tuning failed: {str(e)}"}), 500
 
 if __name__ == '__main__':
+    # Run the Flask app in debug mode for easier development
     app.run(debug=True)
