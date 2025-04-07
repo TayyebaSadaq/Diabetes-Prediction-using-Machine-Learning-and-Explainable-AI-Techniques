@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Platform, TextInput, Button, ScrollView, TouchableOpacity } from 'react-native';
+import { Image, StyleSheet, Platform, TextInput, Button, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
 import React, { useState } from "react";
 import { View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
@@ -73,25 +73,35 @@ export default function DiagnosisScreen() {
     }
   };
 
+  const windowWidth = useWindowDimensions().width;
+
+  const getResultItemWidth = () => {
+    if (windowWidth > 1200) return '30%'; // 3 items per row for large screens
+    if (windowWidth > 800) return '45%'; // 2 items per row for medium screens
+    return '100%'; // 1 item per row for small screens
+  };
+
+  const resultItemWidth = getResultItemWidth();
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <ThemedText style={styles.title}>Enter Your Details</ThemedText>
-      {Object.keys(formData).map((key) => (
-        <View key={key} style={styles.inputRow}>
-          <ThemedText style={styles.inputLabel}>{key}:</ThemedText>
-          <TextInput
-            style={styles.input}
-            placeholder={key}
-            keyboardType="numeric"
-            value={formData[key as keyof typeof formData]}
-            onChangeText={(text) => handleChange(key as keyof typeof formData, text)}
-          />
-        </View>
-      ))}
+      <View style={styles.formContainer}>
+        {Object.keys(formData).map((key) => (
+          <View key={key} style={styles.inputRow}>
+            <ThemedText style={styles.inputLabel}>{key}:</ThemedText>
+            <TextInput
+              style={styles.input}
+              placeholder={key}
+              keyboardType="numeric"
+              value={formData[key as keyof typeof formData]}
+              onChangeText={(text) => handleChange(key as keyof typeof formData, text)}
+            />
+          </View>
+        ))}
+      </View>
       <View style={styles.buttonRow}>
-        <View style={styles.submitButton}>
-          <Button title="Submit" onPress={handleSubmit} />
-        </View>
+        <Button title="Submit" onPress={handleSubmit} style={styles.submitButton} />
         <View style={styles.toggleMenu}>
           {models.map((model) => (
             <TouchableOpacity
@@ -103,7 +113,7 @@ export default function DiagnosisScreen() {
               onPress={() => toggleModelSelection(model)}
             >
               <ThemedText style={styles.toggleButtonText}>
-                {model.replace('_', ' ')} {/* Display model names in a user-friendly format */}
+                {model.replace('_', ' ')}
               </ThemedText>
             </TouchableOpacity>
           ))}
@@ -114,7 +124,7 @@ export default function DiagnosisScreen() {
           <ThemedText style={styles.resultsTitle}>Diagnosis Results:</ThemedText>
           <View style={styles.resultsRow}>
             {Object.keys(results).map((model) => (
-              <View key={model} style={styles.resultItem}>
+              <View key={model} style={[styles.resultItem, { width: resultItemWidth }]}>
                 <ThemedText style={styles.resultText}>
                   Model: {model}
                 </ThemedText>
@@ -131,7 +141,6 @@ export default function DiagnosisScreen() {
                   source={{ uri: `data:image/png;base64,${results[model].lime_explanation_image}` }}
                   style={styles.explanationImage}
                 />
-                {/* Display the general text-based explanation */}
                 <ThemedText style={styles.textExplanation}>
                   {results[model].text_explanation}
                 </ThemedText>
@@ -146,99 +155,131 @@ export default function DiagnosisScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    padding: 20,
     alignItems: 'center',
+    backgroundColor: '#f9f9f9',
+    width: '100%', // Ensure the container spans the full width
+    maxWidth: 1200, // Increase the maximum width for larger screens
+    marginHorizontal: 'auto', // Center the container on larger screens
   },
   title: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
-    marginBottom: 16,
+    marginBottom: 20,
+    color: '#333',
+    textAlign: 'center',
+  },
+  formContainer: {
+    width: '100%',
+    maxWidth: 800, // Increase the form container width
+    alignItems: 'center',
   },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 8,
-    width: '80%',
+    marginVertical: 10,
+    width: '90%',
   },
   inputLabel: {
     width: '40%',
     fontSize: 16,
-    color: '#333',
+    color: '#555',
     marginRight: 10,
   },
   input: {
     flex: 1,
-    padding: 10,
+    padding: 12,
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: 5,
+    borderRadius: 8,
+    backgroundColor: '#fff',
   },
   buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'center', 
+    flexDirection: 'column',
     alignItems: 'center',
     width: '100%',
-    marginVertical: 10,
+    marginVertical: 20,
   },
   toggleMenu: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'center', 
-    marginLeft: 10, 
+    justifyContent: 'center',
+    marginTop: 10,
   },
   toggleButton: {
     padding: 10,
     margin: 5,
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: 5,
-    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
+    backgroundColor: '#e6e6e6',
   },
   selectedToggleButton: {
     backgroundColor: '#007BFF',
     borderColor: '#0056b3',
   },
   toggleButtonText: {
-    color: '#000',
+    color: '#fff',
+    fontWeight: 'bold',
   },
   submitButton: {
-    marginRight: 10, 
+    marginBottom: 10,
+    width: '90%',
   },
   resultsContainer: {
-    marginTop: 20,
+    marginTop: 30,
     width: '100%',
+    maxWidth: 1000, // Increase the results container width
     alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
   },
   resultsTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 15,
+    color: '#333',
   },
   resultsRow: {
-    flexDirection: 'row', 
-    flexWrap: 'wrap', 
-    justifyContent: 'space-around', 
-    width: '100%', 
+    flexDirection: 'row',
+    flexWrap: 'wrap', // Allow wrapping for smaller screens
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    width: '100%',
   },
   resultItem: {
-    marginVertical: 10, 
+    marginVertical: 10,
     alignItems: 'center',
-    width: '30%', 
+    backgroundColor: '#f1f1f1',
+    padding: 20,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   resultText: {
     fontSize: 16,
+    color: '#333',
+    marginBottom: 5,
   },
   explanationImage: {
-    width: 300,
-    height: 200,
+    width: '100%',
+    height: 150,
     resizeMode: 'contain',
     marginTop: 10,
   },
   textExplanation: {
     marginTop: 10,
     fontSize: 14,
-    color: '#333',
-    textAlign: 'left',
-    width: '100%',
+    color: '#555',
+    textAlign: 'center',
   },
 });
