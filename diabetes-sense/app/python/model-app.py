@@ -55,9 +55,13 @@ def predict():
         # Scale the input data
         input_df_scaled = scaler.transform(input_df)
         
+        selected_models = data.get('models', models.keys())  # Use selected models or default to all
         results = {}
         
         for model_name, model in models.items():
+            if model_name not in selected_models:  # Skip models not selected
+                continue
+
             if model_name == "random_forest":
                 prediction = model.predict(input_df)[0]  # Use unscaled data for Random Forest
                 confidence = max(model.predict_proba(input_df)[0])
@@ -68,11 +72,6 @@ def predict():
                 lime_input = input_df_scaled[0]  # Use scaled data for LIME
 
             result = "Diabetic" if prediction == 1 else "Not Diabetic"
-
-            # Debugging statements
-            print(f"Model: {model_name}, Prediction: {result}, Confidence: {confidence}")
-            print(f"Input Data: {input_df.values[0]}")
-            print(f"Scaled Input Data: {input_df_scaled[0]}")
 
             # Generate LIME explanation
             exp = explainer.explain_instance(
@@ -86,7 +85,7 @@ def predict():
             ax.barh(feature_names, feature_importances, color='blue')
             ax.set_xlabel('Feature Importance')
             ax.set_title('LIME Explanation')
-            plt.tight_layout()  # Adjust the layout to ensure labels are not cut off
+            plt.tight_layout()
             buf = BytesIO()
             fig.savefig(buf, format="png")
             buf.seek(0)
@@ -105,7 +104,7 @@ def predict():
     
     except Exception as e:
         print(f"Error in predict function: {e}")
-        return jsonify({"error": f"Prediction failed: {str(e)}"}), 500  # Improved error message
+        return jsonify({"error": f"Prediction failed: {str(e)}"}), 500
 
 @app.route('/tune', methods=['POST'])
 def tune_models():
@@ -150,7 +149,7 @@ def tune_models():
 
     except Exception as e:
         print(f"Error in tune_models function: {e}")
-        return jsonify({"error": f"Model tuning failed: {str(e)}"}), 500  # Improved error message
+        return jsonify({"error": f"Model tuning failed: {str(e)}"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
