@@ -106,14 +106,17 @@ def predict():
             simplified_feature_names = list(feature_importances_dict.keys())
             feature_importances = list(feature_importances_dict.values())
 
-            # Create a bar chart visualization of the LIME explanation
-            fig, ax = plt.subplots()
+            # Create an extremely large bar chart visualization of the LIME explanation
+            fig, ax = plt.subplots(figsize=(50, 50))  # Set figure size to 50x50 inches
             ax.barh(simplified_feature_names, feature_importances, color='blue')
-            ax.set_xlabel('Feature Importance')
-            ax.set_title('LIME Explanation')
+            ax.set_xlabel('Feature Importance', fontsize=24)  # Larger font size for x-axis label
+            ax.set_title('LIME Explanation', fontsize=28)  # Larger font size for title
+            ax.tick_params(axis='both', which='major', labelsize=20)  # Larger tick labels
             plt.tight_layout()
+
+            # Save the figure with a higher DPI to achieve 10,000 x 10,000 pixels
             buf = BytesIO()
-            fig.savefig(buf, format="png")
+            fig.savefig(buf, format="png", dpi=200)  # 50 inches * 200 DPI = 10,000 pixels
             buf.seek(0)
             img_base64 = base64.b64encode(buf.read()).decode('utf-8')
             plt.close(fig)

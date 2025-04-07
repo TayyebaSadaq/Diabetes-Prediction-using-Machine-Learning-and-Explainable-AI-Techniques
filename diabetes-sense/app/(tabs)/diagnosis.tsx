@@ -101,7 +101,9 @@ export default function DiagnosisScreen() {
         ))}
       </View>
       <View style={styles.buttonRow}>
-        <Button title="Submit" onPress={handleSubmit} style={styles.submitButton} />
+        <View style={styles.submitButton}>
+          <Button title="Submit" onPress={handleSubmit} />
+        </View>
         <View style={styles.toggleMenu}>
           {models.map((model) => (
             <TouchableOpacity
@@ -224,7 +226,7 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     marginBottom: 10,
-    width: '90%',
+    width: '25%',
   },
   resultsContainer: {
     marginTop: 30,
