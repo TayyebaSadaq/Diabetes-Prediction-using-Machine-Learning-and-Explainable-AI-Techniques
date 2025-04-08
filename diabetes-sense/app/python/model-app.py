@@ -110,8 +110,11 @@ def predict():
             fig, ax = plt.subplots(figsize=(50, 30))  # Large graph size
             ax.barh(simplified_feature_names, feature_importances, color='blue', height=0.8)
             ax.set_xlabel('Feature Importance', fontsize=70)
-            ax.set_title('LIME Explanation', fontsize=80)
+            # Update the graph title to be more descriptive and user-friendly
+            ax.set_title('Key Features Impacting This Prediction (LIME Explanation)', fontsize=80)
             ax.tick_params(axis='both', which='major', labelsize=60)
+            # Rotate x-axis labels slightly to prevent overlapping
+            plt.xticks(rotation=45, ha='right')
             plt.tight_layout(pad=3.0)
 
             # Save the figure to a buffer and encode it as base64

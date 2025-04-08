@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Platform, TextInput, Button, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
+import { Image, StyleSheet, Platform, TextInput, Button, ScrollView, TouchableOpacity, useWindowDimensions, Text } from 'react-native';
 import React, { useState } from "react";
 import { View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
@@ -127,19 +127,24 @@ export default function DiagnosisScreen() {
           <View style={styles.resultsRow}>
             {Object.keys(results).map((model) => (
               <View key={model} style={[styles.resultItem, { width: resultItemWidth }]}>
-                <ThemedText style={styles.resultText}>
-                  Model: {model}
+                {/* Display the model name in a clear and bold format */}
+                <ThemedText style={styles.resultModelTitle}>
+                  {model.replace('_', ' ').toUpperCase()}
                 </ThemedText>
+                {/* Show the prediction result (Diabetic or Not Diabetic) */}
                 <ThemedText style={styles.resultText}>
-                  Prediction: {results[model].prediction}
+                  <Text style={styles.resultLabel}>Prediction:</Text> {results[model].prediction}
                 </ThemedText>
+                {/* Display the confidence level of the prediction */}
                 <ThemedText style={styles.resultText}>
-                  Confidence: {(results[model].confidence * 100).toFixed(2)}%
+                  <Text style={styles.resultLabel}>Confidence:</Text> {(results[model].confidence * 100).toFixed(2)}%
                 </ThemedText>
+                {/* Render the LIME explanation image for the prediction */}
                 <Image
                   source={{ uri: `data:image/png;base64,${results[model].lime_explanation_image}` }}
                   style={styles.explanationImage}
                 />
+                {/* Provide a textual explanation of the prediction */}
                 <ThemedText style={styles.textExplanation}>
                   {results[model].text_explanation}
                 </ThemedText>
@@ -253,33 +258,57 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   resultItem: {
+    // Style for each result box, including padding, background color, and shadow
     marginVertical: 10,
     alignItems: 'center',
-    backgroundColor: '#f1f1f1',
+    backgroundColor: '#f8f9fa',
     padding: 20,
-    borderRadius: 10,
+    borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  resultModelTitle: {
+    // Style for the model title to make it bold and prominent
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#007BFF',
+    marginBottom: 10,
+    textAlign: 'center',
   },
   resultText: {
+    // Style for the result text (e.g., prediction and confidence)
     fontSize: 16,
     color: '#333',
     marginBottom: 5,
+    textAlign: 'center',
+  },
+  resultLabel: {
+    // Style for labels within the result text to make them stand out
+    fontWeight: 'bold',
+    color: '#555',
   },
   explanationImage: {
-    width: '100%', // Allow the image to take up the full width of its container
-    height: undefined, // Maintain aspect ratio
-    aspectRatio: 1, // Ensure the image is square (1:1 aspect ratio)
-    resizeMode: 'contain', // Ensure the image scales without cropping
-    marginTop: 10,
+    // Style for the LIME explanation image, ensuring it is clear and well-sized
+    width: '90%',
+    height: undefined,
+    aspectRatio: 1,
+    resizeMode: 'contain',
+    marginTop: 15,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ccc',
   },
   textExplanation: {
-    marginTop: 10,
+    // Style for the textual explanation, ensuring readability
+    marginTop: 15,
     fontSize: 14,
-    color: '#555',
+    color: '#666',
     textAlign: 'center',
+    lineHeight: 20,
   },
 });
