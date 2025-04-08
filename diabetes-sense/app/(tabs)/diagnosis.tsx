@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Platform, TextInput, Button, ScrollView, TouchableOpacity, useWindowDimensions, Text } from 'react-native';
+import { Image, StyleSheet, Platform, TextInput, Button, ScrollView, TouchableOpacity, useWindowDimensions, Text, Modal } from 'react-native';
 import React, { useState } from "react";
 import { View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
@@ -7,6 +7,7 @@ import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
 export default function DiagnosisScreen() {
+  // State to hold user input for the form fields
   const [formData, setFormData] = useState<{
     Pregnancies: string;
     Glucose: string;
@@ -27,25 +28,35 @@ export default function DiagnosisScreen() {
     Age: ''
   });
 
+  // State to store the prediction results from the backend
   const [results, setResults] = useState<any>(null);
+
+  // State to track which models the user has selected
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
 
-  const models = ['logistic_regression', 'random_forest', 'gradient_boosting']; 
+  // State to control the visibility of the assistant modal
+  const [isAssistantVisible, setIsAssistantVisible] = useState(false);
 
+  // List of available machine learning models
+  const models = ['logistic_regression', 'random_forest', 'gradient_boosting'];
+
+  // Function to handle changes in form input fields
   const handleChange = (key: keyof typeof formData, value: string) => {
     setFormData({ ...formData, [key]: value });
   };
 
+  // Function to toggle the selection of a model
   const toggleModelSelection = (model: string) => {
     setSelectedModels((prev) =>
       prev.includes(model) ? prev.filter((m) => m !== model) : [...prev, model]
     );
   };
 
+  // Function to handle form submission and fetch predictions from the backend
   const handleSubmit = async () => {
     console.log("User input:", formData);
 
-    // Convert form data to numeric types
+    // Convert form data to numeric types for backend processing
     const numericFormData = {
       Pregnancies: parseFloat(formData.Pregnancies),
       Glucose: parseFloat(formData.Glucose),
@@ -55,10 +66,11 @@ export default function DiagnosisScreen() {
       BMI: parseFloat(formData.BMI),
       DiabetesPedigreeFunction: parseFloat(formData.DiabetesPedigreeFunction),
       Age: parseFloat(formData.Age),
-      models: selectedModels.length > 0 ? selectedModels : models, // Include selected models or default to all
+      models: selectedModels.length > 0 ? selectedModels : models, // Use selected models or default to all
     };
 
     try {
+      // Send a POST request to the backend with the form data
       const response = await fetch('http://localhost:5000/predict', {
         method: 'POST',
         headers: {
@@ -67,6 +79,7 @@ export default function DiagnosisScreen() {
         body: JSON.stringify(numericFormData)
       });
 
+      // Parse and store the prediction results
       const result = await response.json();
       console.log('Diagnosis results:', result);
       setResults(result);
@@ -75,6 +88,7 @@ export default function DiagnosisScreen() {
     }
   };
 
+  // Function to save the results as an HTML file
   const saveAsHTML = async () => {
     try {
       if (!results) {
@@ -82,6 +96,7 @@ export default function DiagnosisScreen() {
         return;
       }
 
+      // Generate an HTML file with the results
       const htmlContent = `
         <!DOCTYPE html>
         <html lang="en">
@@ -122,6 +137,7 @@ export default function DiagnosisScreen() {
         </html>
       `;
 
+      // Save the HTML file locally or share it
       if (Platform.OS === 'web') {
         const blob = new Blob([htmlContent], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
@@ -147,18 +163,23 @@ export default function DiagnosisScreen() {
     }
   };
 
-  const windowWidth = useWindowDimensions().width;
+  // Function to toggle the visibility of the assistant modal
+  const toggleAssistant = () => {
+    setIsAssistantVisible(!isAssistantVisible);
+  };
 
+  // Determine the width of result items based on screen size
+  const windowWidth = useWindowDimensions().width;
   const getResultItemWidth = () => {
     if (windowWidth > 1200) return '30%'; // 3 items per row for large screens
     if (windowWidth > 800) return '45%'; // 2 items per row for medium screens
     return '100%'; // 1 item per row for small screens
   };
-
   const resultItemWidth = getResultItemWidth();
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      {/* Form Section */}
       <ThemedText style={styles.title}>Enter Your Details</ThemedText>
       <View style={styles.formContainer}>
         {Object.keys(formData).map((key) => (
@@ -174,6 +195,8 @@ export default function DiagnosisScreen() {
           </View>
         ))}
       </View>
+
+      {/* Buttons Section */}
       <View style={styles.buttonRow}>
         <View style={styles.submitButton}>
           <Button title="Submit" onPress={handleSubmit} />
@@ -195,30 +218,55 @@ export default function DiagnosisScreen() {
           ))}
         </View>
       </View>
+
+      {/* Assistant Modal */}
+      <TouchableOpacity style={styles.assistantButton} onPress={toggleAssistant}>
+        <Text style={styles.assistantButtonText}>Need Help?</Text>
+      </TouchableOpacity>
+      <Modal
+        visible={isAssistantVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={toggleAssistant}
+      >
+        <View style={styles.assistantOverlay}>
+          <View style={styles.assistantContainer}>
+            <Text style={styles.assistantTitle}>How to Use the App</Text>
+            <Text style={styles.assistantText}>
+              <Text style={styles.boldText}>Enter Your Information:</Text>
+              {"\n"}Fill in your details in the form fields.
+              {"\n\n"}<Text style={styles.boldText}>Choose Prediction Models:</Text>
+              {"\n"}Select the models you'd like to use for your diagnosis. Selecting none automatically provides results for all the models.
+              {"\n\n"}<Text style={styles.boldText}>Get Results:</Text>
+              {"\n"}Hit "Submit" to see your diagnosis and prediction results.
+              {"\n\n"}<Text style={styles.boldText}>Save Your Results:</Text>
+              {"\n"}If you'd like, you can save your results as an HTML file for easy access later.
+            </Text>
+            <Button title="Got it!" onPress={toggleAssistant} />
+          </View>
+        </View>
+      </Modal>
+
+      {/* Results Section */}
       {results && (
         <View style={styles.resultsContainer}>
           <ThemedText style={styles.resultsTitle}>Diagnosis Results:</ThemedText>
           <View style={styles.resultsRow}>
             {Object.keys(results).map((model) => (
               <View key={model} style={[styles.resultItem, { width: resultItemWidth }]}>
-                {/* Display the model name in a clear and bold format */}
                 <ThemedText style={styles.resultModelTitle}>
                   {model.replace('_', ' ').toUpperCase()}
                 </ThemedText>
-                {/* Show the prediction result (Diabetic or Not Diabetic) */}
                 <ThemedText style={styles.resultText}>
                   <Text style={styles.resultLabel}>Prediction:</Text> {results[model].prediction}
                 </ThemedText>
-                {/* Display the confidence level of the prediction */}
                 <ThemedText style={styles.resultText}>
                   <Text style={styles.resultLabel}>Confidence:</Text> {(results[model].confidence * 100).toFixed(2)}%
                 </ThemedText>
-                {/* Render the LIME explanation image for the prediction */}
                 <Image
                   source={{ uri: `data:image/png;base64,${results[model].lime_explanation_image}` }}
                   style={styles.explanationImage}
                 />
-                {/* Provide a textual explanation of the prediction */}
                 <ThemedText style={styles.textExplanation}>
                   {results[model].text_explanation}
                 </ThemedText>
@@ -392,5 +440,55 @@ const styles = StyleSheet.create({
     marginTop: 20,
     width: '50%',
     alignSelf: 'center',
+  },
+  assistantButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    backgroundColor: '#007BFF',
+    padding: 10,
+    borderRadius: 50,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  assistantButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  assistantOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  assistantContainer: {
+    width: '80%',
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  assistantTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  assistantText: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 20,
+    textAlign: 'left',
+    lineHeight: 22,
+  },
+  boldText: {
+    fontWeight: 'bold',
   },
 });
