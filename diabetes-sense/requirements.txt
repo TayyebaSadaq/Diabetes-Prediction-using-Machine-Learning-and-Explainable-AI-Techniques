@@ -28,6 +28,7 @@ debugpy
 decorator
 defusedxml
 executing
+expo-sharing
 fastjsonschema
 flask
 fonttools

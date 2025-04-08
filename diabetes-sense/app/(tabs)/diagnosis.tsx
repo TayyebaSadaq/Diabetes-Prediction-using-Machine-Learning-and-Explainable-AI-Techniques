@@ -3,6 +3,8 @@ import React, { useState } from "react";
 import { View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 export default function DiagnosisScreen() {
   const [formData, setFormData] = useState<{
@@ -70,6 +72,78 @@ export default function DiagnosisScreen() {
       setResults(result);
     } catch (error) {
       console.error('Error:', error);
+    }
+  };
+
+  const saveAsHTML = async () => {
+    try {
+      if (!results) {
+        alert('No results available to save.');
+        return;
+      }
+
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Diabetes Prediction Results</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1 { color: #333; }
+            .header { margin-bottom: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            table, th, td { border: 1px solid #ccc; }
+            th, td { padding: 10px; text-align: left; }
+            .image-container { text-align: center; margin-top: 20px; }
+            .image-container img { max-width: 50%; height: auto; border: 1px solid #ccc; border-radius: 8px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Diabetes Prediction Results</h1>
+          </div>
+          <h2>User Input</h2>
+          <table>
+            ${Object.entries(formData).map(([key, value]) => `<tr><th>${key}</th><td>${value}</td></tr>`).join('')}
+          </table>
+          <h2>Model Results</h2>
+          ${Object.keys(results).map(model => `
+            <h3>${model.replace('_', ' ').toUpperCase()}</h3>
+            <p><strong>Prediction:</strong> ${results[model].prediction}</p>
+            <p><strong>Confidence:</strong> ${(results[model].confidence * 100).toFixed(2)}%</p>
+            <div class="image-container">
+              <img src="data:image/png;base64,${results[model].lime_explanation_image}" alt="LIME Explanation for ${model}" />
+            </div>
+            <p><strong>Explanation:</strong> ${results[model].text_explanation}</p>
+          `).join('')}
+        </body>
+        </html>
+      `;
+
+      if (Platform.OS === 'web') {
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'results.html';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } else {
+        const fileUri = `${FileSystem.documentDirectory}results.html`;
+        await FileSystem.writeAsStringAsync(fileUri, htmlContent);
+        await Sharing.shareAsync(fileUri);
+      }
+    } catch (error) {
+      console.error('Error saving HTML:', error);
+      if (error instanceof Error) {
+        alert(`An error occurred while saving the HTML file: ${error.message}`);
+      } else {
+        alert('An unknown error occurred while saving the HTML file.');
+      }
     }
   };
 
@@ -150,6 +224,9 @@ export default function DiagnosisScreen() {
                 </ThemedText>
               </View>
             ))}
+          </View>
+          <View style={styles.saveButton}>
+            <Button title="Save as HTML" onPress={saveAsHTML} />
           </View>
         </View>
       )}
@@ -310,5 +387,10 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     lineHeight: 20,
+  },
+  saveButton: {
+    marginTop: 20,
+    width: '50%',
+    alignSelf: 'center',
   },
 });
