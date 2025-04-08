@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#f9f9f9',
     width: '100%', // Ensure the container spans the full width
-    maxWidth: 1200, // Increase the maximum width for larger screens
+    maxWidth: '100%', // Increase the maximum width for larger screens
     marginHorizontal: 'auto', // Center the container on larger screens
   },
   title: {
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     width: '100%',
-    maxWidth: 800, // Increase the form container width
+    maxWidth: '100%', // Increase the form container width
     alignItems: 'center',
   },
   inputRow: {
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
   resultsContainer: {
     marginTop: 30,
     width: '100%',
-    maxWidth: 1000, // Increase the results container width
+    maxWidth: '100%', 
     alignItems: 'center',
     backgroundColor: '#fff',
     padding: 20,
