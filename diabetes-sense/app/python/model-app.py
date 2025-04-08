@@ -144,7 +144,7 @@ def predict():
                 "confidence": confidence,
                 "accuracy": accuracies[model_name],
                 "lime_explanation": lime_explanation,
-                "lime_explanation_image": img_base64,  # Graph as Base64
+                "lime_explanation_image": img_base64,  # Ensure this is properly encoded
                 "text_explanation": explanation_text,
             }
         
