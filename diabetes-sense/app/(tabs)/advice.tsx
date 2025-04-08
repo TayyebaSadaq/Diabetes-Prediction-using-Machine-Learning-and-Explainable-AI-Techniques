@@ -314,33 +314,39 @@ export default function AdviceScreen() {
           visible={!!selectedSection}
           onRequestClose={() => setSelectedSection(null)}
         >
-          <ScrollView contentContainerStyle={styles.modalOverlay}>
-            <ThemedView style={styles.modalContent}>
-              <ThemedText style={styles.modalHeader}>{selectedSection.title}</ThemedText>
-              {selectedSection.content.map((subsection, index) => (
-                <View key={index} style={styles.subsectionContainer}>
-                  <TouchableOpacity
-                    style={styles.subsectionHeader}
-                    onPress={() => toggleSubsection(index)}
-                  >
-                    <Icon name={subsection.icon} size={24} color="#007BFF" />
-                    <ThemedText style={styles.subsectionTitle}>{subsection.title}</ThemedText>
-                  </TouchableOpacity>
-                  {expandedSubsection === index && (
-                    <Text style={styles.subsectionBody}>
-                      {renderDetailsWithLinks(subsection.details, subsection.links)}
-                    </Text>
-                  )}
-                </View>
-              ))}
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => setSelectedSection(null)}
-              >
-                <ThemedText style={styles.closeButtonText}>Close</ThemedText>
-              </TouchableOpacity>
-            </ThemedView>
-          </ScrollView>
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setSelectedSection(null)} // Close modal when clicking outside
+          >
+            <View style={styles.modalContentWrapper}>
+              <ThemedView style={styles.modalContent}>
+                <ThemedText style={styles.modalHeader}>{selectedSection.title}</ThemedText>
+                {selectedSection.content.map((subsection, index) => (
+                  <View key={index} style={styles.subsectionContainer}>
+                    <TouchableOpacity
+                      style={styles.subsectionHeader}
+                      onPress={() => toggleSubsection(index)}
+                    >
+                      <Icon name={subsection.icon} size={24} color="#007BFF" />
+                      <ThemedText style={styles.subsectionTitle}>{subsection.title}</ThemedText>
+                    </TouchableOpacity>
+                    {expandedSubsection === index && (
+                      <Text style={styles.subsectionBody}>
+                        {renderDetailsWithLinks(subsection.details, subsection.links)}
+                      </Text>
+                    )}
+                  </View>
+                ))}
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => setSelectedSection(null)}
+                >
+                  <ThemedText style={styles.closeButtonText}>Close</ThemedText>
+                </TouchableOpacity>
+              </ThemedView>
+            </View>
+          </TouchableOpacity>
         </Modal>
       )}
     </ScrollView>
@@ -382,7 +388,7 @@ const styles = StyleSheet.create({
   },
   tile: {
     backgroundColor: '#e6f7ff',
-    width: '30%',
+    width: '22%', // Adjusted width to fit 4 tiles in a row
     aspectRatio: 1,
     borderRadius: 12,
     marginBottom: 12,
@@ -397,10 +403,10 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   tileIcon: {
-    marginBottom: 8,
+    marginBottom: 6, 
   },
   tileTitle: {
-    fontSize: 12,
+    fontSize: 20, 
     fontWeight: '600',
     textAlign: 'center',
     color: '#007BFF',
@@ -412,12 +418,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
   },
+  modalContentWrapper: {
+    width: '90%', // Reverted to original width
+    maxHeight: '80%', // Reverted to original height
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   modalContent: {
     backgroundColor: '#fff',
     padding: 24,
     borderRadius: 12,
-    width: '90%',
-    maxHeight: '80%',
+    width: '100%',
+    height: 'auto', // Allow content to determine height
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
