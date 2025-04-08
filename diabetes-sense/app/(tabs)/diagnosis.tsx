@@ -179,6 +179,13 @@ export default function DiagnosisScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      {/* Disclaimer Section */}
+      <ThemedView style={styles.disclaimerContainer}>
+        <ThemedText style={styles.disclaimerText}>
+          Disclaimer: This tool is powered by AI and is intended to assist users in understanding potential risks. It should not be used as a sole method for diagnosis. Please consult a healthcare professional for further advice and an official diagnosis.
+        </ThemedText>
+      </ThemedView>
+
       {/* Form Section */}
       <ThemedText style={styles.title}>Enter Your Details</ThemedText>
       <View style={styles.formContainer}>
@@ -290,6 +297,25 @@ const styles = StyleSheet.create({
     width: '100%', // Ensure the container spans the full width
     maxWidth: '100%', // Increase the maximum width for larger screens
     marginHorizontal: 'auto', // Center the container on larger screens
+  },
+  disclaimerContainer: {
+    marginBottom: 20,
+    padding: 16,
+    backgroundColor: '#fff3cd',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ffeeba',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  disclaimerText: {
+    fontSize: 14,
+    color: '#856404',
+    textAlign: 'center',
+    lineHeight: 20,
   },
   title: {
     fontSize: 26,
