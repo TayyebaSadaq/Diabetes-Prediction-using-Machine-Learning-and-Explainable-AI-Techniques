@@ -5,9 +5,12 @@ from sklearn.preprocessing import MinMaxScaler
 import seaborn as sns
 import matplotlib.pyplot as plt
 import pickle
+import os
 
-data = pd.read_csv(r"C:\Users\tayye\Desktop\Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques\diabetes-sense\app\data\pima.csv")
+base_path = os.path.dirname(os.path.abspath(__file__))  # Get the directory of the current script
 
+data_path = os.path.join(base_path, "../data/pima.csv")
+data = pd.read_csv(data_path)
 
 # checking functions - multi use
 def round(data):
@@ -31,22 +34,19 @@ def remove_outliers_zscore(df, column, threshold=3):
     ub = mean + threshold * std
     return df[(df[column] >= lb) & (df[column] <= ub)]
 
-# print(data.head())
-# data.info()
-# print(data.isnull().sum())
+print(data.head())
+data.info()
+print(data.isnull().sum())
 
 ## STATISTICAL ANALYSIS
-# print(data.describe())
+print(data.describe())
 
 ## CHECK CATEGORICAL AND NUMERICAL COLUMNS
 categorical_columns = [col for col in data.columns if data[col].dtype == 'object']
-# print("Categorical Columns: ", categorical_columns)
+print("Categorical Columns: ", categorical_columns)
 numerical_columns = [col for col in data.columns if data[col].dtype != 'object']
-# print("Numerical Columns: ", numerical_columns)
+print("Numerical Columns: ", numerical_columns)
 
-
-## REMOVE UNWANTED COLUMNS
-# NOT YET DECIDED
 
 ## CHECKING FOR MISSING DATA
 round(data)
@@ -64,43 +64,67 @@ data['Insulin'] = data['Insulin'].replace(0, data['Insulin'].median())
 round(data)
 
 ## REMOVING OUTLIERS
-# check outliers for pregnancies, bmi, insulin, blood pressure
-fig, axs = plt.subplots(4, 1, dpi = 95, figsize = (7,17))
+# Check outliers for pregnancies, BMI, insulin, blood pressure (before preprocessing)
+fig, axs = plt.subplots(4, 1, dpi=95, figsize=(7, 17))
+fig.suptitle("Outliers Before Preprocessing", fontsize=16)  # Add heading
 i = 0
 for col in ['Pregnancies', 'BMI', 'Insulin', 'BloodPressure']:
-    axs[i].boxplot(data[col], vert = False)
+    axs[i].boxplot(data[col], vert=False)
     axs[i].set_ylabel(col)
     i += 1
-# plt.show()
+plt.show()
 
-# removing outliers (IQR method chosesn as it's more robust)
+# Removing outliers (IQR method chosen as it's more robust)
 data = remove_outliers_iqr(data, 'BMI')
-# data_z = remove_outliers_zscore(data, 'BMI')
 data = remove_outliers_iqr(data, 'Insulin')
-# data_z = remove_outliers_zscore(data, 'Insulin')
 data = remove_outliers_iqr(data, 'BloodPressure')
-# data_z = remove_outliers_zscore(data, 'BloodPressure')
 data = remove_outliers_iqr(data, 'Pregnancies')
-# data_z = remove_outliers_zscore(data, 'Pregnancies')
 
-# checking outliers after removing
-fig, axs = plt.subplots(4, 1, dpi = 95, figsize = (7,17))
+# Checking outliers after removing
+fig, axs = plt.subplots(4, 1, dpi=95, figsize=(7, 17))
+fig.suptitle("Outliers After Preprocessing", fontsize=16)  # Add heading
 i = 0
 for col in ['Pregnancies', 'BMI', 'Insulin', 'BloodPressure']:
-    axs[i].boxplot(data[col], vert = False)
+    axs[i].boxplot(data[col], vert=False)
     axs[i].set_ylabel(col)
     i += 1
+plt.show()
+
+## EDA: Distribution of Numerical Features
+fig, axs = plt.subplots(4, 2, dpi=95, figsize=(14, 16))
+fig.suptitle("Distribution of Numerical Features", fontsize=16)
+numerical_columns = ['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age']
+for i, col in enumerate(numerical_columns):
+    sns.histplot(data[col], kde=True, ax=axs[i // 2, i % 2], color='blue')
+    axs[i // 2, i % 2].set_title(f"Distribution of {col}")
+plt.tight_layout(rect=[0, 0, 1, 0.96])
+plt.show()
+
+## EDA: Correlation Heatmap
+plt.figure(dpi=95, figsize=(10, 8))
+plt.title("Correlation Heatmap", fontsize=16)
+sns.heatmap(data.corr(), annot=True, cmap='coolwarm', fmt=".2f", linewidths=0.5)
+plt.show()
+
+## EDA: Outcome Distribution
+plt.figure(dpi=95, figsize=(6, 4))
+sns.countplot(x='Outcome', data=data, palette='Set2')
+plt.title("Outcome Distribution", fontsize=16)
+plt.xlabel("Outcome")
+plt.ylabel("Count")
 plt.show()
 
 print(data.duplicated().sum()) # duplicate checking
 
 # Save as Pickle (for faster loading)
-with open(r"C:\Users\tayye\Desktop\Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques\diabetes-sense\app\data\preprocessed_pima.pkl", "wb") as f:
+pickle_path = os.path.join(base_path, "../data/preprocessed_pima.pkl")
+with open(pickle_path, "wb") as f:
     pickle.dump(data, f)
 print("Data saved successfully as Pickle.")
 
 # Save as CSV
-data.to_csv(r"C:\Users\tayye\Desktop\Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques\diabetes-sense\app\data\preprocessed_pima.csv", index=False)
+csv_path = os.path.join(base_path, "../data/preprocessed_pima.csv")
+data.to_csv(csv_path, index=False)
 print("Data saved successfully as CSV.")
 
 # Balancing the dataset using undersampling
@@ -115,5 +139,6 @@ data_balanced = pd.concat([class_0_undersampled, class_1])
 data_balanced = data_balanced.sample(frac=1, random_state=42).reset_index(drop=True)
 
 # Save the balanced dataset
-data_balanced.to_csv(r"C:\Users\tayye\Desktop\Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques\diabetes-sense\app\data\balanced_pima.csv", index=False)
+balanced_csv_path = os.path.join(base_path, "../data/balanced_pima.csv")
+data_balanced.to_csv(balanced_csv_path, index=False)
 print("Balanced dataset saved successfully as CSV.")

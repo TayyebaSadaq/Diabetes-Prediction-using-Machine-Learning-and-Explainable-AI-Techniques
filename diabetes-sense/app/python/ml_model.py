@@ -14,12 +14,15 @@ from sklearn.ensemble import GradientBoostingClassifier
 
 from lime.lime_tabular import LimeTabularExplainer
 import warnings
+import os
 
 # Suppress all warnings
 warnings.filterwarnings('ignore')
 
 ### IMPORTING PREPROCESSED DATA
-data = pd.read_csv(r"C:\Users\tayye\Desktop\Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques\diabetes-sense\app\data\balanced_pima.csv")
+base_path = os.path.dirname(os.path.abspath(__file__))  # Get the directory of the current script
+data_path = os.path.join(base_path, "../data/balanced_pima.csv")  # Adjust path relative to script
+data = pd.read_csv(data_path)
 
 ### Splitting the data into training and testing sets (80% training, 20% testing)
 X = data[['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age']]  # Features
@@ -98,7 +101,7 @@ print(f"Accuracy: {accuracy_gmb:.2f}")
 print("\nClassification Report:\n", classification_rep_gmb)
 
 # Save the scaler
-scaler_filename = r"C:\Users\tayye\Desktop\Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques\diabetes-sense\app\models\scaler.pkl"
+scaler_filename = os.path.join(base_path, "../models/scaler.pkl")
 joblib.dump(scaler, scaler_filename)
 print(f"Scaler saved successfully at {scaler_filename}")
 
@@ -107,9 +110,10 @@ models = [best_lr, best_rf, best_gmb]
 model_names = ["logistic_regression.pkl", "random_forest.pkl", "gradient_boosting.pkl"]
 accuracies = [cv_scores_lr.mean(), cv_scores_rf.mean(), cv_scores_gmb.mean()]
 
-model_folder = r"C:\Users\tayye\Desktop\Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques\diabetes-sense\app\models"
+model_folder = os.path.join(base_path, "../models")
 
 # Save each model and its accuracy
 for each, name, accuracy in zip(models, model_names, accuracies):
-    joblib.dump((each, accuracy), model_folder + "\\" + name)
+    model_path = os.path.join(model_folder, name)
+    joblib.dump((each, accuracy), model_path)
     print(f"{name} saved successfully at {model_folder} with accuracy {accuracy:.2f}")
