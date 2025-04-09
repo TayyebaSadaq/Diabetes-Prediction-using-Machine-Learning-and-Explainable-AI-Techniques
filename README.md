@@ -32,7 +32,7 @@ This project leverages Machine Learning (ML) and Explainable AI (XAI) techniques
 ### Steps
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/your-username/Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques.git
+   git clone https://github.com/TayyebaSadaq/Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques.git
    cd Diabetes-Prediction-using-Machine-Learning-and-Explainable-AI-Techniques
    ```
 
