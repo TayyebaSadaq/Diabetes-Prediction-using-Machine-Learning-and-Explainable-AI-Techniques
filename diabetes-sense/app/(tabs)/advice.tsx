@@ -312,13 +312,9 @@ export default function AdviceScreen() {
           transparent={true}
           animationType="slide"
           visible={!!selectedSection}
-          onRequestClose={() => setSelectedSection(null)}
+          onRequestClose={() => {}} // Disable hardware back button close
         >
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => setSelectedSection(null)} // Close modal when clicking outside
-          >
+          <View style={styles.modalOverlay}>
             <View style={styles.modalContentWrapper}>
               <ThemedView style={styles.modalContent}>
                 <ThemedText style={styles.modalHeader}>{selectedSection.title}</ThemedText>
@@ -340,13 +336,13 @@ export default function AdviceScreen() {
                 ))}
                 <TouchableOpacity
                   style={styles.closeButton}
-                  onPress={() => setSelectedSection(null)}
+                  onPress={() => setSelectedSection(null)} // Close modal only via this button
                 >
                   <ThemedText style={styles.closeButtonText}>Close</ThemedText>
                 </TouchableOpacity>
               </ThemedView>
             </View>
-          </TouchableOpacity>
+          </View>
         </Modal>
       )}
     </ScrollView>
