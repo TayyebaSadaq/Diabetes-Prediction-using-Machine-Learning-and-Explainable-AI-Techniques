@@ -105,6 +105,12 @@ scaler_filename = os.path.join(base_path, "../models/scaler.pkl")
 joblib.dump(scaler, scaler_filename)
 print(f"Scaler saved successfully at {scaler_filename}")
 
+# Save the test data for evaluation
+test_data = pd.concat([X_test, y_test], axis=1)
+test_data_path = os.path.join(base_path, "../data/test_data.csv")
+test_data.to_csv(test_data_path, index=False)
+print(f"Test data saved successfully at {test_data_path}")
+
 # Save the best models and their accuracies
 models = [best_lr, best_rf, best_gmb]
 model_names = ["logistic_regression.pkl", "random_forest.pkl", "gradient_boosting.pkl"]

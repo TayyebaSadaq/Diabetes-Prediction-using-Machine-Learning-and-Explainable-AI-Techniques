@@ -108,7 +108,11 @@ def predict():
 
             # Create a bar chart visualization of the LIME explanation
             fig, ax = plt.subplots(figsize=(50, 30))  # Large graph size
-            ax.barh(simplified_feature_names, feature_importances, color='blue', height=0.8)
+
+            # Set bar colors: green for positive, red for negative importances
+            bar_colors = ['green' if importance > 0 else 'red' for importance in feature_importances]
+            ax.barh(simplified_feature_names, feature_importances, color=bar_colors, height=0.8)
+
             ax.set_xlabel('Feature Importance', fontsize=70)
             # Update the graph title to be more descriptive and user-friendly
             ax.set_title('Key Features Impacting This Prediction (LIME Explanation)', fontsize=80)

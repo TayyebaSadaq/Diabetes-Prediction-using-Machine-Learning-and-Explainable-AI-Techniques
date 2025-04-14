@@ -26,23 +26,42 @@ for name in model_names:
 
 # Load test data
 test_data_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'test_data.csv')
+if not os.path.exists(test_data_path):
+    raise FileNotFoundError(f"Test data file not found: {test_data_path}. Please ensure the file exists at the specified location.")
+
 test_data = pd.read_csv(test_data_path)
-X_test = test_data.drop("target", axis=1)
-y_test = test_data["target"]
+X_test = test_data.drop("Outcome", axis=1).values  # Convert to NumPy array to avoid feature name mismatch
+y_test = test_data["Outcome"].values  # Convert to NumPy array for consistency
+
+# Load the scaler
+scaler_path = os.path.join(model_folder, "scaler.pkl")
+if not os.path.exists(scaler_path):
+    raise FileNotFoundError(f"Scaler file not found: {scaler_path}. Please ensure the scaler exists at the specified location.")
+scaler = joblib.load(scaler_path)
+
+# Scale the test data
+X_test = scaler.transform(X_test)
 
 # Initialize LIME explainer
 explainer = LimeTabularExplainer(
-    training_data=X_test.values,
-    feature_names=X_test.columns,
+    training_data=X_test,
+    feature_names=test_data.drop("Outcome", axis=1).columns.tolist(),
     class_names=["Non-Diabetic", "Diabetic"],
     mode="classification"
 )
+
+# Create evaluation folder if it doesn't exist
+evaluation_folder = os.path.join(os.path.dirname(__file__), '..', 'evaluation')
+os.makedirs(evaluation_folder, exist_ok=True)
 
 # Evaluate each model
 for model_name, model in models.items():
     print(f"Evaluating {model_name}...")
     y_pred = model.predict(X_test)
     y_proba = model.predict_proba(X_test)[:, 1]
+
+    # Debugging: Print predictions
+    print(f"Predictions for {model_name}: {np.unique(y_pred, return_counts=True)}")
 
     # Print evaluation metrics
     print(f"Accuracy: {accuracy_score(y_test, y_pred):.2f}")
@@ -64,17 +83,26 @@ for model_name, model in models.items():
     plt.ylabel("True Positive Rate")
     plt.title(f"ROC Curve for {model_name}")
     plt.legend(loc="lower right")
-    plt.savefig(f"{model_name}_roc_curve.png")
+    roc_curve_path = os.path.join(evaluation_folder, f"{model_name}_roc_curve.png")
+    plt.savefig(roc_curve_path)
     plt.close()
 
 # Run LIME explanations on selected instances
-selected_instances = X_test.sample(5, random_state=42)
+selected_instances = pd.DataFrame(X_test, columns=test_data.drop("Outcome", axis=1).columns).sample(5, random_state=42)
 for idx, instance in selected_instances.iterrows():
     explanation = explainer.explain_instance(
-        data_row=instance,
+        data_row=instance.values,  # Use .values to avoid deprecated behavior
         predict_fn=models["logistic_regression"].predict_proba  # Change model as needed
     )
-    explanation.save_to_file(f"lime_explanation_{idx}.html")
-    explanation.as_pyplot_figure()
-    plt.savefig(f"lime_explanation_{idx}.png")
+    lime_png_path = os.path.join(evaluation_folder, f"lime_explanation_{idx}.png")
+    fig = explanation.as_pyplot_figure()
+
+    # Customize the graph
+    fig.set_size_inches(10, 8)  # Make the graph larger
+    ax = fig.gca()
+    ax.set_yticklabels([label.get_text().split(' ')[0] for label in ax.get_yticklabels()])  # Extract text and remove thresholds
+
+    # Adjust layout to prevent feature names from being cut off
+    fig.tight_layout(pad=3.0)
+    plt.savefig(lime_png_path, bbox_inches="tight")  # Use bbox_inches to ensure everything fits
     plt.close()
