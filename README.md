@@ -63,7 +63,7 @@ This project leverages Machine Learning (ML) and Explainable AI (XAI) techniques
 4. **Access the App**
    - Open your browser and navigate to `http://localhost:3000` (or the specified port) to use the app.
 
-* if you're not AT LEAST in the "diabetes-sense" folder you will run into errors. if you're there and still face some issues, open an issue detailing what error you're receiving
+*Make sure you're in the "diabetes-sense" folder to avoid errors. If you're already there and still facing issues, please open an issue and include the error details.
 
 ## Remote Deployment (WIP)
 The remote deployment of this application is currently a work in progress and is being developed on a separate branch (remote-deployment). An update will be made to this README once the deployment is available.
