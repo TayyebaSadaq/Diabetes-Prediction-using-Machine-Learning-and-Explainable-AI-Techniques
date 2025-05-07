@@ -63,6 +63,9 @@ This project leverages Machine Learning (ML) and Explainable AI (XAI) techniques
 4. **Access the App**
    - Open your browser and navigate to `http://localhost:3000` (or the specified port) to use the app.
 
+## Remote Deployment (WIP)
+The remote deployment of this application is currently a work in progress and is being developed on a separate branch (remote-deployment). An update will be made to this README once the deployment is available.
+
 ## Contributing
 Feel free to fork the repository and submit pull requests for suggested improvements or additional features as this is an ongoing project outside my dissertation.
 
