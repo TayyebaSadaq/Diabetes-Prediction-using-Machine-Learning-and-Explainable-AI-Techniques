@@ -37,7 +37,10 @@ This project leverages Machine Learning (ML) and Explainable AI (XAI) techniques
    ```
 
 2. **Set Up the Backend**
-   - Navigate to the source/app's directory (diabetes-sense).
+   - Navigate to the backend directory - diabetes-sense
+     ```bash
+     cd diabetes-sense
+     ```
    - Install the required Python packages:
      ```bash
      pip install -r requirements.txt
@@ -48,7 +51,7 @@ This project leverages Machine Learning (ML) and Explainable AI (XAI) techniques
      ```
 
 3. **Set Up the Frontend**
-   - Navigate to the frontend directory (if applicable).
+   - remain in the diabetes-sense directory *this is key to ensure the code runs as expected and you don't receive an error
    - Install dependencies:
      ```bash
      npm install
@@ -62,11 +65,6 @@ This project leverages Machine Learning (ML) and Explainable AI (XAI) techniques
 
 4. **Access the App**
    - Open your browser and navigate to `http://localhost:3000` (or the specified port) to use the app.
-
-*Make sure you're in the "diabetes-sense" folder to avoid errors. If you're already there and still facing issues, please open an issue and include the error details.
-
-## Remote Deployment (WIP)
-The remote deployment of this application is currently a work in progress and is being developed on a separate branch (remote-deployment). An update will be made to this README once the deployment is available.
 
 ## Contributing
 Feel free to fork the repository and submit pull requests for suggested improvements or additional features as this is an ongoing project outside my dissertation.
