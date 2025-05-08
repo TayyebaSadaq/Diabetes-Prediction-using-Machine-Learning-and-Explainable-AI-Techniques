@@ -37,7 +37,7 @@ This project leverages Machine Learning (ML) and Explainable AI (XAI) techniques
    ```
 
 2. **Set Up the Backend**
-   - Navigate to the backend directory (if applicable).
+   - Navigate to the backend directory - diabetes-sense
    - Install the required Python packages:
      ```bash
      pip install -r requirements.txt
@@ -48,7 +48,7 @@ This project leverages Machine Learning (ML) and Explainable AI (XAI) techniques
      ```
 
 3. **Set Up the Frontend**
-   - Navigate to the frontend directory (if applicable).
+   - remain in the diabetes-sense directory *this is key to ensure the code runs as expected and you don't receive an error
    - Install dependencies:
      ```bash
      npm install
